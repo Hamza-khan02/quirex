@@ -1,9 +1,9 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import { userModel, propertyModel, buyerModel, findByIds } from "../model/table.js";
-import { authenticate, requireRole, signToken } from "../middleware/auth.js";
+import { authenticate, signToken } from "../middleware/auth.js";
 import { send } from "../utils/http.js";
-import { str, passwordField, passwordError, isEmail, isObjectId } from "../utils/validate.js";
+import { str, passwordField, passwordError, isEmail } from "../utils/validate.js";
 import { getImage, saveImage, removeImage, removeImageIfUnused } from "../utils/upload.js";
 
 const router = express.Router();
@@ -112,36 +112,6 @@ router.put("/user-update", authenticate, async (req, res) => {
   if (image.file) await removeImageIfUnused(oldProfile);
 
   return send(res, 200, "Profile updated successfully.", user);
-});
-
-const takenMessage = (dealType) =>
-  dealType === "rent" ? "Property already rented." : "Property already sold.";
-
-// Buys a property listed for sale, or rents one listed for rent.
-router.post("/buy", authenticate, requireRole("user"), async (req, res) => {
-  const propertyId = str(req.body?.propertyId);
-  if (!isObjectId(propertyId)) return send(res, 400, "Invalid property.");
-
-  const property = await propertyModel.findById(propertyId);
-  if (!property) return send(res, 404, "Property not found.");
-
-  const existing = await buyerModel.findOne({ propertyId });
-  if (existing) return send(res, 409, takenMessage(existing.dealType));
-
-  const dealType = property.listingType === "rent" ? "rent" : "sale";
-  try {
-    const deal = await buyerModel.create({
-      userId: String(req.user._id),
-      propertyId,
-      dealType,
-    });
-    const message = dealType === "rent" ? "Property rented successfully." : "Property bought successfully.";
-    return send(res, 200, message, deal);
-  } catch (err) {
-    // Someone else got there between the check above and this insert.
-    if (err.code === 11000) return send(res, 409, takenMessage(dealType));
-    throw err;
-  }
 });
 
 router.post("/user-bought-list", authenticate, async (req, res) => {

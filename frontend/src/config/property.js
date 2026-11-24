@@ -27,3 +27,13 @@ export const formatPrice = (price, listingType) => {
 };
 
 export const dealLabel = (dealType) => (dealType === "rent" ? "Rented" : "Bought");
+
+// Purchase/rent request statuses with their badge colours.
+export const REQUEST_STATUS = {
+  pending: { label: "Pending", badge: "bg-warning text-dark" },
+  approved: { label: "Approved", badge: "bg-success" },
+  rejected: { label: "Rejected", badge: "bg-danger" },
+  cancelled: { label: "Cancelled", badge: "bg-secondary" },
+};
+
+export const requestTypeLabel = (dealType) => (dealType === "rent" ? "Rent" : "Buy");

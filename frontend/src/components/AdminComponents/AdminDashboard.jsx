@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBuilding, FaCheckCircle, FaTags, FaKey, FaUsers, FaEnvelopeOpenText } from 'react-icons/fa';
+import { FaBuilding, FaCheckCircle, FaTags, FaKey, FaUsers, FaEnvelopeOpenText, FaClipboardList } from 'react-icons/fa';
 import NavBar from '../landingComponents/NavBar';
 import { api } from '../../config/api';
 import { getUser } from '../../config/auth';
@@ -20,6 +20,13 @@ const AdminDashboard = () => {
 
   const counts = data?.counts;
   const cards = [
+    {
+      label: 'Pending Requests',
+      value: counts?.pendingRequests,
+      note: counts?.pendingRequests ? 'needs review' : null,
+      icon: <FaClipboardList />,
+      to: '/admin-requests',
+    },
     { label: 'Total Properties', value: counts?.totalProperties, icon: <FaBuilding />, to: '/admin-list' },
     { label: 'Available', value: counts?.availableProperties, icon: <FaCheckCircle />, to: '/admin-list' },
     { label: 'Sold', value: counts?.soldProperties, icon: <FaTags />, to: '/admin-sold' },
@@ -52,7 +59,7 @@ const AdminDashboard = () => {
           <Link to="/admin-add" className="btn btn1 px-4">+ Add Property</Link>
         </div>
 
-        <div className="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-4">
+        <div className="row row-cols-2 row-cols-md-4 g-4">
           {cards.map((card) => (
             <div key={card.label} className="col">
               <Link to={card.to} className="text-decoration-none">

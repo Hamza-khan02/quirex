@@ -22,12 +22,16 @@ export const signToken = (user) =>
     expiresIn: JWT_EXPIRES_IN,
   });
 
+const bearerToken = (req) => {
+  const header = req.headers.authorization || "";
+  return header.startsWith("Bearer ") ? header.slice(7) : "";
+};
+
 // Requires "Authorization: Bearer <token>" and loads the user into req.user.
 // The user is re-read from the database so a deleted account or a role change
 // takes effect immediately.
 export const authenticate = async (req, res, next) => {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const token = bearerToken(req);
   if (!token) return send(res, 401, "Please log in first.");
 
   let payload;
@@ -42,6 +46,22 @@ export const authenticate = async (req, res, next) => {
   if (user.isBlocked) return send(res, 401, "Your account has been blocked.");
 
   req.user = user;
+  next();
+};
+
+// For public routes that show a little more to logged-in users. A valid token
+// sets req.user; a missing, expired or invalid one is simply ignored.
+export const optionalAuth = async (req, res, next) => {
+  const token = bearerToken(req);
+  if (token) {
+    try {
+      const payload = jwt.verify(token, JWT_SECRET);
+      const user = await userModel.findById(payload.sub);
+      if (user && !user.isBlocked) req.user = user;
+    } catch {
+      // Treat the request as anonymous.
+    }
+  }
   next();
 };
 

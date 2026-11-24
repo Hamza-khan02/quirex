@@ -6,6 +6,7 @@ import NavBar from './NavBar';
 import PropertyReviews from './PropertyReviews';
 import BuyButton from '../common/BuyButton';
 import StarRating from '../common/StarRating';
+import WishlistButton from '../common/WishlistButton';
 import { api, getImageUrl } from '../../config/api';
 import { getUser } from '../../config/auth';
 import { PROPERTY_TYPES, LISTING_TYPES, STATUS_LABELS, labelFor, formatPrice } from '../../config/property';
@@ -61,7 +62,15 @@ const PropertyDetail = () => {
                   <span className="tagline mb-0">{labelFor(PROPERTY_TYPES, property.propertyType)}</span>
                   {property.status !== 'available' && <span className="tagline mb-0">{STATUS_LABELS[property.status]}</span>}
                 </div>
-                <h2 className="section-title mycolor2">{property.title}</h2>
+                <div className="d-flex justify-content-between align-items-start gap-3">
+                  <h2 className="section-title mycolor2">{property.title}</h2>
+                  <WishlistButton property={property} className="flex-shrink-0 mt-1" />
+                </div>
+                {property.pendingRequests > 0 && (
+                  <Link to="/admin-requests" className="badge bg-warning text-dark text-decoration-none mb-2">
+                    {property.pendingRequests} pending request{property.pendingRequests > 1 ? 's' : ''}
+                  </Link>
+                )}
                 <p className="featuredp mb-2"><IoLocationOutline className="me-1" />{property.location}</p>
                 <p className="mb-2">
                   {property.rating?.count > 0 ? (

@@ -5,6 +5,9 @@ import {
   userModel,
   contactModel,
   reviewModel,
+  requestModel,
+  wishlistModel,
+  viewerContext,
   findByIds,
   dealsByProperty,
   ratingSummaries,
@@ -12,7 +15,7 @@ import {
   PROPERTY_TYPES,
   LISTING_TYPES,
 } from "../model/table.js";
-import { authenticate, requireRole } from "../middleware/auth.js";
+import { authenticate, optionalAuth, requireRole } from "../middleware/auth.js";
 import { send } from "../utils/http.js";
 import { str, num, escapeRegex, isObjectId } from "../utils/validate.js";
 import { getImage, saveImage, removeImage, removeImageIfUnused } from "../utils/upload.js";
@@ -20,10 +23,16 @@ import { getImage, saveImage, removeImage, removeImageIfUnused } from "../utils/
 const adminRoute = express.Router();
 const adminOnly = [authenticate, requireRole("admin")];
 
-// One property in API form: stored fields plus status and rating.
-const presentProperty = async (property) => {
+// One property in API form: stored fields plus status, rating and the
+// viewer's flags (saved, requested, pending request count).
+const presentProperty = async (property, viewerUser) => {
   const id = String(property._id);
-  return withStatus(property, await dealsByProperty([id]), await ratingSummaries([id]));
+  const [deals, ratings, viewer] = await Promise.all([
+    dealsByProperty([id]),
+    ratingSummaries([id]),
+    viewerContext(viewerUser, [id]),
+  ]);
+  return withStatus(property, deals, ratings, viewer);
 };
 
 // Validates the property form. Returns { fields } or { error }.
@@ -79,8 +88,9 @@ const MAX_PAGE_SIZE = 50;
 //   available    "true" hides sold and rented properties
 //   sort         newest | price_asc | price_desc
 //   page, limit  pagination (limit at most 50)
-// Responds with { items, total, page, pages, limit }.
-adminRoute.get("/property-list", async (req, res) => {
+// Responds with { items, total, page, pages, limit }. Logged-in viewers also
+// get their flags on each item (see viewerContext).
+adminRoute.get("/property-list", optionalAuth, async (req, res) => {
   const query = req.query ?? {};
   const filter = {};
 
@@ -122,10 +132,11 @@ adminRoute.get("/property-list", async (req, res) => {
     .sort(SORTS[str(query.sort)] ?? SORTS.newest)
     .skip((page - 1) * limit)
     .limit(limit);
-  const ratings = await ratingSummaries(properties.map((p) => p._id));
+  const ids = properties.map((p) => p._id);
+  const [ratings, viewer] = await Promise.all([ratingSummaries(ids), viewerContext(req.user, ids)]);
 
   return send(res, 200, "Data fetched successfully.", {
-    items: properties.map((property) => withStatus(property, deals, ratings)),
+    items: properties.map((property) => withStatus(property, deals, ratings, viewer)),
     total,
     page,
     pages,
@@ -134,11 +145,11 @@ adminRoute.get("/property-list", async (req, res) => {
 });
 
 // Public: one property, for the detail page and the admin edit form.
-adminRoute.get("/property/:id", async (req, res) => {
+adminRoute.get("/property/:id", optionalAuth, async (req, res) => {
   const { id } = req.params;
   const property = isObjectId(id) ? await propertyModel.findById(id) : null;
   if (!property) return send(res, 404, "Property not found.");
-  return send(res, 200, "Data fetched successfully.", await presentProperty(property));
+  return send(res, 200, "Data fetched successfully.", await presentProperty(property, req.user));
 });
 
 adminRoute.post("/add-property", adminOnly, async (req, res) => {
@@ -156,7 +167,7 @@ adminRoute.post("/add-property", adminOnly, async (req, res) => {
   const pic = await saveImage(image.file);
   try {
     const property = await propertyModel.create({ ...fields, pic });
-    return send(res, 200, "Property added successfully.", await presentProperty(property));
+    return send(res, 200, "Property added successfully.", await presentProperty(property, req.user));
   } catch (err) {
     await removeImage(pic);
     throw err;
@@ -191,7 +202,7 @@ adminRoute.put("/update-property", adminOnly, async (req, res) => {
   }
   if (newPic) await removeImageIfUnused(oldPic);
 
-  return send(res, 200, "Property updated successfully.", await presentProperty(property));
+  return send(res, 200, "Property updated successfully.", await presentProperty(property, req.user));
 });
 
 adminRoute.get("/admin-dashboard", adminOnly, async (req, res) => {
@@ -212,6 +223,7 @@ adminRoute.get("/admin-dashboard", adminOnly, async (req, res) => {
     totalEnquiries,
     unreadEnquiries,
     totalReviews,
+    pendingRequests,
     latestDeals,
     latestEnquiries,
   ] = await Promise.all([
@@ -221,6 +233,7 @@ adminRoute.get("/admin-dashboard", adminOnly, async (req, res) => {
     contactModel.countDocuments(),
     contactModel.countDocuments({ isRead: false }),
     reviewModel.countDocuments(),
+    requestModel.countDocuments({ status: "pending" }),
     // Newest first by _id, which also orders older records whose createdAt
     // values are all identical.
     buyerModel.find().sort({ _id: -1 }).limit(5),
@@ -243,6 +256,7 @@ adminRoute.get("/admin-dashboard", adminOnly, async (req, res) => {
       totalEnquiries,
       unreadEnquiries,
       totalReviews,
+      pendingRequests,
     },
     recentSales: latestDeals.map((deal) => {
       const property = properties.get(deal.propertyId);
@@ -299,8 +313,8 @@ adminRoute.get("/admin-sold-list", adminOnly, async (req, res) => {
   return send(res, 200, "Data fetched successfully.", data);
 });
 
-// Deleting a property also deletes its deal record, its reviews and, if
-// nothing else uses it, its image file.
+// Deleting a property also deletes its deal record, requests, reviews and
+// wishlist entries and, if nothing else uses it, its image file.
 adminRoute.post("/delete-property", adminOnly, async (req, res) => {
   const id = str(req.body?._id);
   if (!isObjectId(id)) return send(res, 400, "Invalid property id.");
@@ -311,6 +325,8 @@ adminRoute.post("/delete-property", adminOnly, async (req, res) => {
   await Promise.all([
     buyerModel.deleteMany({ propertyId: id }),
     reviewModel.deleteMany({ propertyId: id }),
+    requestModel.deleteMany({ propertyId: id }),
+    wishlistModel.deleteMany({ propertyId: id }),
   ]);
   await removeImageIfUnused(property.pic);
   return send(res, 200, "Property deleted successfully.");

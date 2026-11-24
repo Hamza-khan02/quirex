@@ -46,10 +46,10 @@ const Footer = () => {
 
       <div className="col-6 col-lg-2">
         <h5 className='text-light'>Services</h5>
-        <a href="#">Order tracking</a>
-        <a href="#">Wish List</a>
+        <Link to="/user-requests">My Requests</Link>
+        <Link to="/user-wishlist">Wish List</Link>
         <Link to="/login">Login</Link>
-        <a href="#">My account</a>
+        <Link to="/user-profile">My account</Link>
         <a href="#">Terms & Conditions</a>
         <a href="#">Promotional Offers</a>
       </div>
@@ -57,9 +57,9 @@ const Footer = () => {
       <div className="col-6 col-lg-2">
         <h5 className='text-light'>Customer Care</h5>
         <Link to="/login">Login</Link>
-        <a href="#">My account</a>
-        <a href="#">Wish List</a>
-        <a href="#">Order tracking</a>
+        <Link to="/user-profile">My account</Link>
+        <Link to="/user-wishlist">Wish List</Link>
+        <Link to="/user-requests">My Requests</Link>
         <a href="#">FAQ</a>
         <Link to="/contact">Contact us</Link>
       </div>

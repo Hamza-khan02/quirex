@@ -3,24 +3,29 @@ import { Link } from 'react-router-dom';
 import { IoBedOutline, IoLocationOutline } from 'react-icons/io5';
 import { BiArea } from 'react-icons/bi';
 import StarRating from './StarRating';
+import WishlistButton from './WishlistButton';
 import { getImageUrl } from '../../config/api';
 import { PROPERTY_TYPES, LISTING_TYPES, STATUS_LABELS, labelFor, formatPrice } from '../../config/property';
 
 // One property in a grid. `children` is the action area at the bottom
-// (Buy button for visitors and users, Edit/Delete for admins).
-const PropertyCard = ({ property, children }) => {
+// (Buy/Rent button for visitors and users, Edit/Delete for admins).
+// `onWishlistChange(saved)` runs when the heart is toggled.
+const PropertyCard = ({ property, children, onWishlistChange }) => {
   const detailPath = `/property/${property._id}`;
   return (
     <div className="card h-100 shadow-lg border border-0">
-      <Link to={detailPath} className="position-relative">
-        <img src={getImageUrl(property.pic)} className="card-img-top img-fluid featuredimg" alt={property.title} />
+      <div className="position-relative">
+        <Link to={detailPath}>
+          <img src={getImageUrl(property.pic)} className="card-img-top img-fluid featuredimg" alt={property.title} />
+        </Link>
         <span className={`badge position-absolute top-0 start-0 m-2 ${property.listingType === 'rent' ? 'bg-info text-dark' : 'bg-success'}`}>
           {labelFor(LISTING_TYPES, property.listingType)}
         </span>
         {property.status && property.status !== 'available' && (
           <span className="badge bg-dark position-absolute top-0 end-0 m-2">{STATUS_LABELS[property.status]}</span>
         )}
-      </Link>
+        <WishlistButton property={property} onChange={onWishlistChange} className="position-absolute bottom-0 end-0 m-2" />
+      </div>
       <div className="card-body d-flex flex-column">
         <div className="d-flex justify-content-between align-items-center gap-2">
           <p className="mycolor1 mb-1"><b>{formatPrice(property.price, property.listingType)}</b></p>
@@ -34,6 +39,11 @@ const PropertyCard = ({ property, children }) => {
           <p className="small mb-2">
             <StarRating value={property.rating.average} /> <span className="featuredp">({property.rating.count})</span>
           </p>
+        )}
+        {property.pendingRequests > 0 && (
+          <Link to="/admin-requests" className="badge bg-warning text-dark text-decoration-none align-self-start mb-2">
+            {property.pendingRequests} pending request{property.pendingRequests > 1 ? 's' : ''}
+          </Link>
         )}
         <p className="card-text featuredp property-description">{property.description}</p>
         <div className="d-flex flex-wrap gap-3 featuredp small mb-3">

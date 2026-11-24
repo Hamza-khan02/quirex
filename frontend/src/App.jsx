@@ -15,6 +15,7 @@ import Login from './components/landingComponents/Login';
 import AdminDashboard from './components/AdminComponents/AdminDashboard';
 import AddProperty from './components/AdminComponents/AddProperty';
 import EditProperty from './components/AdminComponents/EditProperty';
+import AdminRequests from './components/AdminComponents/AdminRequests';
 import AdminPropertyList from './components/AdminComponents/AdminPropertyList';
 import AdminSoldProperty from './components/AdminComponents/AdminSoldProperty';
 import UserList from './components/AdminComponents/UserList';
@@ -22,6 +23,8 @@ import AdminProfile from './components/AdminComponents/AdminProfile';
 import AdminContactUsList from './components/AdminComponents/AdminContactUsList';
 import UserBoughtList from './components/userComponents/UserBoughtList';
 import UserProfile from './components/userComponents/UserProfile';
+import UserWishlist from './components/userComponents/UserWishlist';
+import UserRequests from './components/userComponents/UserRequests';
 import ProtectedRoute from './components/ProtectedRoute';
 import Aos from 'aos';
 import { useEffect } from 'react';
@@ -59,12 +62,15 @@ useEffect(()=>{
           <Route path='/admin-add' element={adminOnly(<AddProperty />)} />
           <Route path='/admin-edit/:id' element={adminOnly(<EditProperty />)} />
           <Route path='/admin-list' element={adminOnly(<AdminPropertyList />)} />
+          <Route path='/admin-requests' element={adminOnly(<AdminRequests />)} />
           <Route path='/admin-sold' element={adminOnly(<AdminSoldProperty />)} />
           <Route path='/admin-user' element={adminOnly(<UserList />)} />
           <Route path='/admin-profile' element={adminOnly(<AdminProfile />)} />
           <Route path='/admin-contact' element={adminOnly(<AdminContactUsList />)} />
           {/* User Route */}
           <Route path='/user-property' element={userOnly(<Property />)} />
+          <Route path='/user-wishlist' element={userOnly(<UserWishlist />)} />
+          <Route path='/user-requests' element={userOnly(<UserRequests />)} />
           <Route path='/user-bought' element={userOnly(<UserBoughtList />)} />
           <Route path='/user-profile' element={userOnly(<UserProfile />)} />
         </Routes>

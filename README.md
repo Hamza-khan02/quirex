@@ -70,6 +70,7 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 |---|---|---|
 | POST | `/user-register` | Anyone (multipart, `profile` image required) |
 | POST | `/login` | Anyone. Returns `{ token, user }` |
+| GET | `/health` | Anyone. `{ database: "connected" }` when the API and database are up |
 | GET | `/property-list` | Anyone. Search and filter, see below |
 | GET | `/property/:id` | Anyone. One property with `status` and `rating` |
 | GET | `/property/:id/reviews` | Anyone |
@@ -77,9 +78,16 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 | POST | `/delete-review` | The review's author, or an admin |
 | POST | `/contact` | Anyone. `name`, `email`, `message`, optional `propertyId` |
 | PUT | `/user-update` | Logged in (own profile; password and picture optional) |
-| POST | `/buy` | Users. Buys a sale listing or rents a rent listing |
-| POST | `/user-bought-list` | Logged in |
-| GET | `/admin-dashboard` | Admin. Counts, recent sales and recent enquiries |
+| POST | `/buy` | Users. Sends a request to buy (sale listing) or rent (rental); the admin approves it |
+| GET | `/my-requests` | Users. Their requests and the admin's decisions |
+| POST | `/cancel-request` | Users. `{ _id }` of their own pending request |
+| POST | `/user-bought-list` | Logged in. Properties they bought or rented |
+| POST | `/wishlist-toggle` | Users. `{ propertyId }`; saves or removes it, returns `{ saved }` |
+| GET | `/wishlist` | Users. Saved properties |
+| GET | `/admin-dashboard` | Admin. Counts, recent deals and recent enquiries |
+| GET | `/admin-request-list` | Admin. Optional `?status=pending` (or approved, rejected, cancelled) |
+| POST | `/admin-approve-request` | Admin. `{ _id }`; sells or rents the property and rejects other pending requests for it |
+| POST | `/admin-reject-request` | Admin. `{ _id, note? }`; the note is shown to the user |
 | POST | `/add-property` | Admin (multipart, `pic` image required) |
 | PUT | `/update-property` | Admin (multipart with `_id`; `pic` optional) |
 | POST | `/delete-property` | Admin |
@@ -107,10 +115,54 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 | `sort` | `newest` (default), `price_asc` or `price_desc` |
 | `page`, `limit` | Pagination; `limit` defaults to 12, at most 50 |
 
-It responds with `{ items, total, page, pages, limit }`. Each item has `status` (`available`, `sold` or `rented`) and `rating` (`{ average, count }`).
+It responds with `{ items, total, page, pages, limit }`. Each item has `status` (`available`, `sold` or `rented`) and `rating` (`{ average, count }`). When the request carries a login token, items also say whether that user saved the property (`isSaved`) or has a pending request for it (`hasPendingRequest`); for admins, `pendingRequests` counts the requests waiting for a decision.
 
 ### Upgrading an existing database
 
 Older versions stored price and area as text, and used "area" for the number of bedrooms. When the server starts, it converts any such properties once: prices become numbers, small area values move to `bedrooms` (larger ones are kept as square feet), and properties get the type `house` and listing `sale`. Check the converted listings in the admin panel afterwards.
 
 Uploaded images are served from `/img/<filename>`. They must be JPG, PNG, WEBP, GIF or AVIF, up to 5 MB.
+
+## Deployment
+
+The usual free setup is MongoDB Atlas for the database, Render for the API and Vercel for the frontend. You need an account on each.
+
+### 1. Database: MongoDB Atlas
+
+1. Create a free cluster at https://www.mongodb.com/atlas.
+2. Under **Database Access**, add a database user with a password.
+3. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`), because Render's IP addresses change.
+4. Click **Connect > Drivers** and copy the connection string. Put the user's password in it and add the database name, for example `mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/quirex`.
+
+### 2. API: Render
+
+1. Push this repository to GitHub.
+2. In Render, choose **New > Blueprint** and pick the repository. It reads [render.yaml](render.yaml).
+3. When asked, set `MONGODB_URI` to the Atlas connection string. Leave `CLIENT_URL` as `http://localhost:5173` for now; you will change it after step 3.
+4. When the deploy finishes, open `https://<your-service>.onrender.com/api/health`. It should show `"database": "connected"`.
+5. Create the admin account in the new database from your computer:
+
+   ```bash
+   cd Backend
+   MONGODB_URI="<atlas connection string>" ADMIN_PASSWORD="<a strong password>" npm run seed:admin
+   ```
+
+   (In PowerShell, set the variables first with `$env:MONGODB_URI="..."` and `$env:ADMIN_PASSWORD="..."`.)
+
+### 3. Frontend: Vercel
+
+1. In Vercel, choose **Add New > Project**, import the repository and set **Root Directory** to `frontend`. Vercel detects Vite.
+2. Add the environment variables `VITE_API_BASE_URL` and `VITE_IMAGE_BASE_URL`, both set to your Render URL (for example `https://quirex-api.onrender.com`), then deploy.
+3. [frontend/vercel.json](frontend/vercel.json) sends every path to `index.html`, so refreshing a page such as `/property/123` works.
+
+### 4. Connect them
+
+In Render, set `CLIENT_URL` to your Vercel URL (for example `https://quirex.vercel.app`). Separate several URLs with commas. Save, and Render redeploys.
+
+### Things to know
+
+- **Uploaded images are not kept on Render's free plan.** Its disk is wiped on every deploy and restart, so property and profile pictures disappear. To keep them, use a paid instance with a disk and set `UPLOAD_DIR` to the disk's mount path (see the commented lines in [render.yaml](render.yaml)), or move image storage to a service such as Cloudinary.
+- **The free Render instance sleeps** after about 15 minutes without traffic, so the first request after that takes up to a minute.
+- **Rate limits:** login, register and contact allow `RATE_LIMIT_MAX` attempts (default 20) per IP every 15 minutes. `TRUST_PROXY=1` (already set in render.yaml) lets the limit see each visitor's own IP.
+- **`JWT_SECRET`** is required when `NODE_ENV=production`; the blueprint generates one. Changing it logs everyone out.
+

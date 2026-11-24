@@ -4,11 +4,11 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { propertyModel, userModel } from "../model/table.js";
 
-export const UPLOAD_DIR = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "uploads"
-);
+// Backend/uploads by default. Set UPLOAD_DIR to keep images somewhere else,
+// such as a persistent disk on the hosting service.
+export const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "uploads");
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const IMAGE_TYPES = {

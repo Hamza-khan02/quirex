@@ -28,6 +28,7 @@ const NavBar = () => {
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-dashboard">Dashboard</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-add">Add</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-list">List</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-requests">Requests</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-sold">Sold</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-user">User</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-profile">Profile</Link></li>
@@ -53,6 +54,8 @@ const NavBar = () => {
           <div className="mx-5 collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-sm-0">
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-property">Property</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-wishlist">Wishlist</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-requests">Requests</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-bought">My Properties</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-profile">Profile</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/contact">Contact</Link></li>
