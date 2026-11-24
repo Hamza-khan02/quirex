@@ -5,12 +5,16 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TopNavbar from './components/landingComponents/TopNavbar';
 import Home from './components/landingComponents/Home';
 import About from './components/landingComponents/About';
+import ContactUs from './components/landingComponents/ContactUs';
+import PropertyDetail from './components/landingComponents/PropertyDetail';
 import Services from './components/landingComponents/Services';
 import Property from './components/landingComponents/Property';
 import UserRegister from './components/landingComponents/UserRegister';
 import Footer from './components/landingComponents/Footer'
 import Login from './components/landingComponents/Login';
+import AdminDashboard from './components/AdminComponents/AdminDashboard';
 import AddProperty from './components/AdminComponents/AddProperty';
+import EditProperty from './components/AdminComponents/EditProperty';
 import AdminPropertyList from './components/AdminComponents/AdminPropertyList';
 import AdminSoldProperty from './components/AdminComponents/AdminSoldProperty';
 import UserList from './components/AdminComponents/UserList';
@@ -46,10 +50,14 @@ useEffect(()=>{
           <Route path='/about' element={<About />} />
           <Route path='/services' element={<Services />} />
           <Route path='/property' element={<Property />} />
+          <Route path='/property/:id' element={<PropertyDetail />} />
+          <Route path='/contact' element={<ContactUs />} />
           <Route path='/register' element={<UserRegister />} />
           <Route path='/login' element={<Login />} />
           {/* admin Section  */}
+          <Route path='/admin-dashboard' element={adminOnly(<AdminDashboard />)} />
           <Route path='/admin-add' element={adminOnly(<AddProperty />)} />
+          <Route path='/admin-edit/:id' element={adminOnly(<EditProperty />)} />
           <Route path='/admin-list' element={adminOnly(<AdminPropertyList />)} />
           <Route path='/admin-sold' element={adminOnly(<AdminSoldProperty />)} />
           <Route path='/admin-user' element={adminOnly(<UserList />)} />
@@ -60,8 +68,8 @@ useEffect(()=>{
           <Route path='/user-bought' element={userOnly(<UserBoughtList />)} />
           <Route path='/user-profile' element={userOnly(<UserProfile />)} />
         </Routes>
+        <Footer />
       </BrowserRouter>
-     <Footer/>
     </>
   )
 }

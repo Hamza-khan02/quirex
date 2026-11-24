@@ -28,4 +28,4 @@ export const clearSession = () => {
 };
 
 export const homePathFor = (user) =>
-  user?.userType === "admin" ? "/admin-add" : "/user-property";
+  user?.userType === "admin" ? "/admin-dashboard" : "/user-property";

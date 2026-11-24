@@ -6,6 +6,7 @@ import { dbConnect } from "./config/db.js";
 import { buyerModel } from "./model/table.js";
 import router from "./route/userRoute.js";
 import adminRoute from "./route/adminRoute.js";
+import contactRoute from "./route/contactRoute.js";
 import { send } from "./utils/http.js";
 import { UPLOAD_DIR, MAX_FILE_SIZE } from "./utils/upload.js";
 
@@ -26,6 +27,7 @@ app.use(
 );
 app.use("/api", router);
 app.use("/api", adminRoute);
+app.use("/api", contactRoute);
 app.use("/api", (req, res) => send(res, 404, "Route not found."));
 
 // Express 5 passes errors thrown in async route handlers to this handler.

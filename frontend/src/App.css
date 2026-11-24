@@ -390,3 +390,23 @@
    background-color: #ff5733 !important;
    color: white !important;
  }
+/* Small buttons in admin tables (the global .btn rule above sets 20px). */
+.btn.btn-sm {
+  font-size: 14px;
+}
+
+/* Disabled "Sold" button: grey instead of the global orange. */
+.btn.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.detail-img {
+  max-height: 480px;
+  object-fit: cover;
+}
+
+.message-cell {
+  white-space: pre-wrap;
+  max-width: 320px;
+}

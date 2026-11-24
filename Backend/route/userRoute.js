@@ -73,6 +73,11 @@ router.post("/login", async (req, res) => {
   if (!user || !(await checkPassword(user, password))) {
     return send(res, 401, "Invalid credentials.");
   }
+  // Checked after the password so the blocked status is only revealed to the
+  // account owner.
+  if (user.isBlocked) {
+    return send(res, 403, "Your account has been blocked. Please contact us.");
+  }
 
   return send(res, 200, "Login successful.", { token: signToken(user), user });
 });

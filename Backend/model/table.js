@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
     address: { type: String },
     profile: { type: String },
     userType: { type: String, default: "user" },
+    // Blocked users cannot log in, and their existing sessions stop working.
+    isBlocked: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -52,6 +54,20 @@ const buyerSchema = new mongoose.Schema(
 );
 
 export const buyerModel = mongoose.model("buyers", buyerSchema);
+
+// Messages sent from the Contact Us page, optionally about one property.
+const contactSchema = new mongoose.Schema(
+  {
+    name: { type: String },
+    email: { type: String },
+    message: { type: String },
+    propertyId: { type: String },
+    isRead: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+export const contactModel = mongoose.model("contacts", contactSchema);
 
 // Loads documents by id and returns them as a Map keyed by the id string.
 // Invalid ids (older records can hold undefined) are skipped.

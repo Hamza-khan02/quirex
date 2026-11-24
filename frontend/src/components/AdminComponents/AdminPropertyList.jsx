@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { IoBedOutline } from "react-icons/io5";
+import { Link } from 'react-router-dom';
 import { FaTrashAlt } from "react-icons/fa";
 import NavBar from '../landingComponents/NavBar'
 import Swal from 'sweetalert2';
@@ -65,7 +66,7 @@ const AdminPropertyList = () => {
                   <div className="card  mx-auto shadow-lg border border-0">
                     <img src={getImageUrl(item?.pic)} className="card-img-top img-fluid featuredimg" alt={item?.title} />
                     <div className="card-body">
-                      <p className='mycolor1'><b>${item?.price}</b>/Month</p>
+                      <p className='mycolor1'><b>${item?.price}</b></p>
                       <h5 className="card-title"><b className='mycolor2'>{item?.title}</b>{item?.isSold && <span className="badge bg-secondary ms-2">Sold</span>}</h5>
                       <p className="card-text featuredp ">{item?.description}</p>
                       <div className='row'>
@@ -73,7 +74,10 @@ const AdminPropertyList = () => {
                           <p className='m-0 ps-2'>{item?.area}<IoBedOutline /></p>
                           <span className='ps-2'>Bedrooms</span>
                         </div>
-                        <button onClick={() => handleDeleteProperty(item?._id)} className='btn btn-outline-danger p-1'>Delete</button>
+                        <div className='d-flex gap-2 mt-2'>
+                          <Link to={`/admin-edit/${item?._id}`} className='btn btn-outline-primary p-1 flex-fill'>Edit</Link>
+                          <button onClick={() => handleDeleteProperty(item?._id)} className='btn btn-outline-danger p-1 flex-fill'>Delete</button>
+                        </div>
                       </div>
                     </div>
                   </div>

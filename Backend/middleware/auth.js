@@ -39,6 +39,7 @@ export const authenticate = async (req, res, next) => {
 
   const user = await userModel.findById(payload.sub);
   if (!user) return send(res, 401, "Account not found. Please log in again.");
+  if (user.isBlocked) return send(res, 401, "Your account has been blocked.");
 
   req.user = user;
   next();

@@ -71,13 +71,21 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 | POST | `/user-register` | Anyone (multipart, `profile` image required) |
 | POST | `/login` | Anyone. Returns `{ token, user }` |
 | GET | `/property-list` | Anyone. Each property has `isSold` |
+| GET | `/property/:id` | Anyone. One property, with `isSold` |
+| POST | `/contact` | Anyone. `name`, `email`, `message`, optional `propertyId` |
 | PUT | `/user-update` | Logged in (own profile; password and picture optional) |
 | POST | `/buy` | Users |
 | POST | `/user-bought-list` | Logged in |
+| GET | `/admin-dashboard` | Admin. Counts, recent sales and recent enquiries |
 | POST | `/add-property` | Admin (multipart, `pic` image required) |
+| PUT | `/update-property` | Admin (multipart with `_id`; `pic` optional) |
 | POST | `/delete-property` | Admin |
 | GET | `/admin-sold-list` | Admin |
 | POST | `/delete-sold-item` | Admin |
 | GET | `/admin-user-list` | Admin |
+| POST | `/admin-toggle-block` | Admin. `{ _id, isBlocked }`; blocked users can't log in |
+| GET | `/admin-contact-list` | Admin |
+| POST | `/admin-contact-read` | Admin. `{ _id, isRead }` |
+| POST | `/delete-contact` | Admin |
 
 Uploaded images are served from `/img/<filename>`. They must be JPG, PNG, WEBP, GIF or AVIF, up to 5 MB.

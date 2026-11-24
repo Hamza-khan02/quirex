@@ -1,6 +1,7 @@
 import React from 'react'
 import { FaHome } from "react-icons/fa";
 import Typewriter from 'typewriter-effect';
+import { Link } from 'react-router-dom';
 const Slider = () => {
   return (
     <>
@@ -26,7 +27,7 @@ const Slider = () => {
                 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                 Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
               </p>
-              <button className="btn btn1">Make An Enquiry</button>
+              <Link to="/contact" className="btn btn1">Make An Enquiry</Link>
             </div>
 
             {/* Image Content */}
