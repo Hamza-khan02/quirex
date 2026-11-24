@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBuilding, FaCheckCircle, FaTags, FaUsers, FaEnvelopeOpenText } from 'react-icons/fa';
+import { FaBuilding, FaCheckCircle, FaTags, FaKey, FaUsers, FaEnvelopeOpenText } from 'react-icons/fa';
 import NavBar from '../landingComponents/NavBar';
 import { api } from '../../config/api';
 import { getUser } from '../../config/auth';
+import { formatPrice } from '../../config/property';
 
 const formatDate = (value) => new Date(value).toLocaleDateString();
 
@@ -22,6 +23,7 @@ const AdminDashboard = () => {
     { label: 'Total Properties', value: counts?.totalProperties, icon: <FaBuilding />, to: '/admin-list' },
     { label: 'Available', value: counts?.availableProperties, icon: <FaCheckCircle />, to: '/admin-list' },
     { label: 'Sold', value: counts?.soldProperties, icon: <FaTags />, to: '/admin-sold' },
+    { label: 'Rented', value: counts?.rentedProperties, icon: <FaKey />, to: '/admin-sold' },
     {
       label: 'Users',
       value: counts?.totalUsers,
@@ -50,7 +52,7 @@ const AdminDashboard = () => {
           <Link to="/admin-add" className="btn btn1 px-4">+ Add Property</Link>
         </div>
 
-        <div className="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+        <div className="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-4">
           {cards.map((card) => (
             <div key={card.label} className="col">
               <Link to={card.to} className="text-decoration-none">
@@ -69,27 +71,28 @@ const AdminDashboard = () => {
           <div className="col-lg-6">
             <div className="form-box h-100">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="mb-0 fw-bold">Recent Sales</h5>
+                <h5 className="mb-0 fw-bold">Recent Deals</h5>
                 <Link to="/admin-sold" className="text-decoration-none">View all</Link>
               </div>
               {data?.recentSales?.length ? (
                 <table className="table table-sm align-middle mb-0">
                   <thead>
-                    <tr><th>Property</th><th>Buyer</th><th>Price</th><th>Date</th></tr>
+                    <tr><th>Property</th><th>Type</th><th>Buyer</th><th>Price</th><th>Date</th></tr>
                   </thead>
                   <tbody>
                     {data.recentSales.map((sale) => (
                       <tr key={sale._id}>
                         <td>{sale.title}</td>
+                        <td>{sale.dealType === 'rent' ? 'Rented' : 'Sold'}</td>
                         <td>{sale.buyer}</td>
-                        <td>{sale.price ? `$${sale.price}` : '–'}</td>
+                        <td>{formatPrice(sale.price, sale.listingType)}</td>
                         <td>{formatDate(sale.date)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <p className="featuredp mb-0">No sales yet.</p>
+                <p className="featuredp mb-0">No deals yet.</p>
               )}
             </div>
           </div>

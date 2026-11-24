@@ -114,32 +114,38 @@ router.put("/user-update", authenticate, async (req, res) => {
   return send(res, 200, "Profile updated successfully.", user);
 });
 
+const takenMessage = (dealType) =>
+  dealType === "rent" ? "Property already rented." : "Property already sold.";
+
+// Buys a property listed for sale, or rents one listed for rent.
 router.post("/buy", authenticate, requireRole("user"), async (req, res) => {
   const propertyId = str(req.body?.propertyId);
   if (!isObjectId(propertyId)) return send(res, 400, "Invalid property.");
 
-  if (!(await propertyModel.exists({ _id: propertyId }))) {
-    return send(res, 404, "Property not found.");
-  }
-  if (await buyerModel.exists({ propertyId })) {
-    return send(res, 409, "Property already sold.");
-  }
+  const property = await propertyModel.findById(propertyId);
+  if (!property) return send(res, 404, "Property not found.");
 
+  const existing = await buyerModel.findOne({ propertyId });
+  if (existing) return send(res, 409, takenMessage(existing.dealType));
+
+  const dealType = property.listingType === "rent" ? "rent" : "sale";
   try {
-    const purchase = await buyerModel.create({
+    const deal = await buyerModel.create({
       userId: String(req.user._id),
       propertyId,
+      dealType,
     });
-    return send(res, 200, "Property bought successfully.", purchase);
+    const message = dealType === "rent" ? "Property rented successfully." : "Property bought successfully.";
+    return send(res, 200, message, deal);
   } catch (err) {
-    // Another buyer got there between the check above and this insert.
-    if (err.code === 11000) return send(res, 409, "Property already sold.");
+    // Someone else got there between the check above and this insert.
+    if (err.code === 11000) return send(res, 409, takenMessage(dealType));
     throw err;
   }
 });
 
 router.post("/user-bought-list", authenticate, async (req, res) => {
-  const purchases = await buyerModel.find({ userId: String(req.user._id) });
+  const purchases = await buyerModel.find({ userId: String(req.user._id) }).sort({ _id: -1 });
   const properties = await findByIds(
     propertyModel,
     purchases.map((p) => p.propertyId)
@@ -151,9 +157,13 @@ router.post("/user-bought-list", authenticate, async (req, res) => {
       const property = properties.get(purchase.propertyId);
       return {
         _id: purchase._id,
+        dealType: purchase.dealType ?? "sale",
         propertyId: property._id,
         title: property.title,
         price: property.price,
+        listingType: property.listingType,
+        propertyType: property.propertyType,
+        bedrooms: property.bedrooms,
         area: property.area,
         location: property.location,
         description: property.description,

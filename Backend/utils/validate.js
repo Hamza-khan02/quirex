@@ -20,3 +20,15 @@ export const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 export const isObjectId = (value) =>
   typeof value === "string" && /^[a-f\d]{24}$/i.test(value);
+
+// Reads a number from a form field or query string. Empty strings and
+// anything that is not a finite number give undefined.
+export const num = (value) => {
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+};
+
+// Makes user text safe to use inside a RegExp (matched literally).
+export const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

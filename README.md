@@ -70,11 +70,14 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 |---|---|---|
 | POST | `/user-register` | Anyone (multipart, `profile` image required) |
 | POST | `/login` | Anyone. Returns `{ token, user }` |
-| GET | `/property-list` | Anyone. Each property has `isSold` |
-| GET | `/property/:id` | Anyone. One property, with `isSold` |
+| GET | `/property-list` | Anyone. Search and filter, see below |
+| GET | `/property/:id` | Anyone. One property with `status` and `rating` |
+| GET | `/property/:id/reviews` | Anyone |
+| POST | `/property/:id/reviews` | Users. `{ rating: 1-5, comment? }`; posting again updates your review |
+| POST | `/delete-review` | The review's author, or an admin |
 | POST | `/contact` | Anyone. `name`, `email`, `message`, optional `propertyId` |
 | PUT | `/user-update` | Logged in (own profile; password and picture optional) |
-| POST | `/buy` | Users |
+| POST | `/buy` | Users. Buys a sale listing or rents a rent listing |
 | POST | `/user-bought-list` | Logged in |
 | GET | `/admin-dashboard` | Admin. Counts, recent sales and recent enquiries |
 | POST | `/add-property` | Admin (multipart, `pic` image required) |
@@ -87,5 +90,27 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 | GET | `/admin-contact-list` | Admin |
 | POST | `/admin-contact-read` | Admin. `{ _id, isRead }` |
 | POST | `/delete-contact` | Admin |
+
+### Searching properties
+
+`GET /api/property-list` takes these optional query parameters:
+
+| Parameter | Meaning |
+|---|---|
+| `q` | Text matched against title, location and description |
+| `location` | Text matched against location |
+| `listingType` | `sale` or `rent` |
+| `propertyType` | `house`, `flat`, `shop` or `land` |
+| `minPrice`, `maxPrice` | Price range (monthly rent for rentals) |
+| `bedrooms` | Minimum number of bedrooms |
+| `available` | `true` hides sold and rented properties |
+| `sort` | `newest` (default), `price_asc` or `price_desc` |
+| `page`, `limit` | Pagination; `limit` defaults to 12, at most 50 |
+
+It responds with `{ items, total, page, pages, limit }`. Each item has `status` (`available`, `sold` or `rented`) and `rating` (`{ average, count }`).
+
+### Upgrading an existing database
+
+Older versions stored price and area as text, and used "area" for the number of bedrooms. When the server starts, it converts any such properties once: prices become numbers, small area values move to `bedrooms` (larger ones are kept as square feet), and properties get the type `house` and listing `sale`. Check the converted listings in the admin panel afterwards.
 
 Uploaded images are served from `/img/<filename>`. They must be JPG, PNG, WEBP, GIF or AVIF, up to 5 MB.

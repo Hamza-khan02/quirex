@@ -2,15 +2,23 @@ import React from 'react';
 import { FaHome, FaDollarSign, FaAlignLeft } from 'react-icons/fa';
 import { FaLocationDot } from 'react-icons/fa6';
 import { IoBedOutline } from 'react-icons/io5';
+import { BiArea } from 'react-icons/bi';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { getImageUrl } from '../../config/api';
+import { PROPERTY_TYPES, LISTING_TYPES } from '../../config/property';
+
+// Number inputs give '' when empty; turn that into a default (or undefined).
+const emptyTo = (fallback) => (value, original) => (original === '' ? fallback : value);
 
 const buildSchema = (imageRequired) => yup.object().shape({
   title: yup.string().trim().required().min(2).max(60),
-  price: yup.string().trim().required(),
-  area: yup.string().trim().required().max(20),
+  listingType: yup.string().oneOf(LISTING_TYPES.map((t) => t.value)).required(),
+  propertyType: yup.string().oneOf(PROPERTY_TYPES.map((t) => t.value)).required(),
+  price: yup.number().typeError('Price must be a number').required().positive(),
+  bedrooms: yup.number().transform(emptyTo(0)).typeError('Bedrooms must be a number').integer().min(0).max(50),
+  area: yup.number().transform(emptyTo(undefined)).typeError('Area must be a number').min(0),
   location: yup.string().trim().required().min(2).max(60),
   description: yup.string().trim().required().min(2).max(500),
   pic: imageRequired
@@ -29,22 +37,28 @@ const PropertyForm = ({
   imageRequired = false,
   resetOnSuccess = false,
 }) => {
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(buildSchema(imageRequired)),
     defaultValues: {
       title: defaultValues?.title ?? '',
+      listingType: defaultValues?.listingType ?? 'sale',
+      propertyType: defaultValues?.propertyType ?? 'house',
       price: defaultValues?.price ?? '',
+      bedrooms: defaultValues?.bedrooms ?? '',
       area: defaultValues?.area ?? '',
       location: defaultValues?.location ?? '',
       description: defaultValues?.description ?? '',
     },
   });
+  const isRent = watch('listingType') === 'rent';
 
   const submit = async (data) => {
     const formData = new FormData();
-    for (const field of ['title', 'price', 'area', 'location', 'description']) {
-      formData.append(field, data[field]);
+    for (const field of ['title', 'listingType', 'propertyType', 'price', 'bedrooms', 'location', 'description']) {
+      formData.append(field, String(data[field]));
     }
+    // An empty area clears it.
+    formData.append('area', data.area === undefined ? '' : String(data.area));
     if (data.pic?.[0]) formData.append('pic', data.pic[0]);
 
     const saved = await onSubmit(formData);
@@ -61,60 +75,83 @@ const PropertyForm = ({
               <div className="row g-3">
 
                 <div className="col-md-6">
-                  <label className="form-label">Title</label>
+                  <label htmlFor="pf-title" className="form-label">Title</label>
                   <div className="input-group">
                     <span className="input-group-text"><FaHome /></span>
-                    <input {...register('title')} type="text" className="form-control" placeholder="Enter title" />
+                    <input id="pf-title" {...register('title')} type="text" className="form-control" placeholder="Enter title" />
                   </div>
                   {errors?.title && <p className='text-danger'>{errors.title.message}</p>}
                 </div>
 
+                <div className="col-md-3 col-6">
+                  <label htmlFor="pf-listingType" className="form-label">Listing</label>
+                  <select id="pf-listingType" {...register('listingType')} className="form-select">
+                    {LISTING_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+                  </select>
+                </div>
+
+                <div className="col-md-3 col-6">
+                  <label htmlFor="pf-propertyType" className="form-label">Type</label>
+                  <select id="pf-propertyType" {...register('propertyType')} className="form-select">
+                    {PROPERTY_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+                  </select>
+                </div>
+
                 <div className="col-md-6">
-                  <label className="form-label">Price</label>
+                  <label htmlFor="pf-price" className="form-label">{isRent ? 'Monthly Rent ($)' : 'Price ($)'}</label>
                   <div className="input-group">
                     <span className="input-group-text"><FaDollarSign /></span>
-                    <input {...register('price')} type="text" className="form-control" placeholder="Enter price" />
+                    <input id="pf-price" {...register('price')} type="number" min="0" step="any" className="form-control" placeholder={isRent ? 'Rent per month' : 'Sale price'} />
                   </div>
                   {errors?.price && <p className='text-danger'>{errors.price.message}</p>}
                 </div>
 
-                <div className="col-md-6">
-                  <label className="form-label">Bedrooms</label>
+                <div className="col-md-3 col-6">
+                  <label htmlFor="pf-bedrooms" className="form-label">Bedrooms</label>
                   <div className="input-group">
                     <span className="input-group-text"><IoBedOutline /></span>
-                    <input {...register('area')} type="text" className="form-control" placeholder="Number of bedrooms" />
+                    <input id="pf-bedrooms" {...register('bedrooms')} type="number" min="0" step="1" className="form-control" placeholder="0" />
+                  </div>
+                  {errors?.bedrooms && <p className='text-danger'>{errors.bedrooms.message}</p>}
+                </div>
+
+                <div className="col-md-3 col-6">
+                  <label htmlFor="pf-area" className="form-label">Area (sq ft)</label>
+                  <div className="input-group">
+                    <span className="input-group-text"><BiArea /></span>
+                    <input id="pf-area" {...register('area')} type="number" min="0" step="any" className="form-control" placeholder="Optional" />
                   </div>
                   {errors?.area && <p className='text-danger'>{errors.area.message}</p>}
                 </div>
 
-                <div className="col-md-6">
-                  <label className="form-label">Location</label>
+                <div className="col-12">
+                  <label htmlFor="pf-location" className="form-label">Location</label>
                   <div className="input-group">
                     <span className="input-group-text"><FaLocationDot /></span>
-                    <input {...register('location')} type="text" className="form-control" placeholder="Location" />
+                    <input id="pf-location" {...register('location')} type="text" className="form-control" placeholder="City or area" />
                   </div>
                   {errors?.location && <p className='text-danger'>{errors.location.message}</p>}
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label">Description</label>
+                  <label htmlFor="pf-description" className="form-label">Description</label>
                   <div className="input-group">
                     <span className="input-group-text"><FaAlignLeft /></span>
-                    <textarea {...register('description')} rows="3" className="form-control" placeholder="Description" />
+                    <textarea id="pf-description" {...register('description')} rows="3" className="form-control" placeholder="Description" />
                   </div>
                   {errors?.description && <p className='text-danger'>{errors.description.message}</p>}
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Image{imageRequired ? '' : ' (leave empty to keep the current one)'}</label>
-                  <input {...register('pic')} type="file" accept="image/*" className="form-control" />
+                  <label htmlFor="pf-pic" className="form-label">Image{imageRequired ? '' : ' (leave empty to keep the current one)'}</label>
+                  <input id="pf-pic" {...register('pic')} type="file" accept="image/*" className="form-control" />
                   {errors?.pic && <p className='text-danger'>{errors.pic.message}</p>}
                 </div>
 
                 {currentImage && (
                   <div className="col-md-6">
-                    <label className="form-label">Current Image</label>
-                    <div><img src={getImageUrl(currentImage)} alt="Current" height="80" className="rounded" /></div>
+                    <span className="form-label d-block">Current Image</span>
+                    <img src={getImageUrl(currentImage)} alt="Current" height="80" className="rounded" />
                   </div>
                 )}
 

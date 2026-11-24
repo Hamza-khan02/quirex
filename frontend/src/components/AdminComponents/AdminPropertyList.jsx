@@ -1,93 +1,64 @@
-import React, { useEffect, useState } from 'react'
-import { IoBedOutline } from "react-icons/io5";
+import React from 'react'
 import { Link } from 'react-router-dom';
-import { FaTrashAlt } from "react-icons/fa";
-import NavBar from '../landingComponents/NavBar'
 import Swal from 'sweetalert2';
-import { api, getImageUrl } from '../../config/api';
+import NavBar from '../landingComponents/NavBar'
+import PropertyCard from '../common/PropertyCard';
+import PropertyFilters from '../common/PropertyFilters';
+import Pagination from '../common/Pagination';
+import { usePropertySearch } from '../common/usePropertySearch';
+import { api } from '../../config/api';
+
 const AdminPropertyList = () => {
-  const [listData, setListData] = useState([])
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const { items, total, page, pages, loaded, searchParams, setSearchParams, setPage, refresh } = usePropertySearch();
 
-  const fetchData = async () => {
-    const response = await api.get('/api/property-list');
-    if (response?.data?.code == 200) {
-      setListData(response?.data?.data)
-    }
-
-  }
-
-  const handleDeleteProperty = async (_id) => {
-    Swal.fire({
+  const handleDeleteProperty = async (property) => {
+    const result = await Swal.fire({
       title: "Are you sure ?",
-      text: "You won't be able to revert this!",
+      text: `Delete "${property.title}"? Its sale record and reviews are deleted too. You won't be able to revert this!`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!"
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-
-     const response = await api.post('/api/delete-property', { _id });
-        if (response?.data?.code == 200) {
-          Swal.fire({
-            title: "Delete Property.",
-            text: response?.data?.message,
-            icon: "success",
-          })
-          fetchData();
-        }else{
-          Swal.fire({
-            title: "Delete Property.",
-            text: response?.data?.message,
-            icon: "error",
-          })
-        }
-      }
     });
+    if (!result.isConfirmed) return;
+
+    const response = await api.post('/api/delete-property', { _id: property._id });
+    Swal.fire({
+      title: "Delete Property.",
+      text: response?.data?.message,
+      icon: response?.data?.code == 200 ? "success" : "error",
+    });
+    refresh();
   }
+
   return (
     <>
       <NavBar />
       <div className='row property py-5'>
         <div className="text-center ">
           <div className="tagline ">Properties </div>
-          <h2 className="section-title">Featured Listings</h2>
+          <h2 className="section-title">All Listings</h2>
         </div>
-        <div className='col-sm-1'></div>
-        <div className='col-sm-10'>
-          <div className='row py-3 px-3 '>
-            {listData?.map((item) => {
-              return (
-                <div key={item?._id} className='col-sm-3  px-3 mb-4'>
-                  <div className="card  mx-auto shadow-lg border border-0">
-                    <img src={getImageUrl(item?.pic)} className="card-img-top img-fluid featuredimg" alt={item?.title} />
-                    <div className="card-body">
-                      <p className='mycolor1'><b>${item?.price}</b></p>
-                      <h5 className="card-title"><b className='mycolor2'>{item?.title}</b>{item?.isSold && <span className="badge bg-secondary ms-2">Sold</span>}</h5>
-                      <p className="card-text featuredp ">{item?.description}</p>
-                      <div className='row'>
-                        <div className='col-4 featureddiv featuredp'>
-                          <p className='m-0 ps-2'>{item?.area}<IoBedOutline /></p>
-                          <span className='ps-2'>Bedrooms</span>
-                        </div>
-                        <div className='d-flex gap-2 mt-2'>
-                          <Link to={`/admin-edit/${item?._id}`} className='btn btn-outline-primary p-1 flex-fill'>Edit</Link>
-                          <button onClick={() => handleDeleteProperty(item?._id)} className='btn btn-outline-danger p-1 flex-fill'>Delete</button>
-                        </div>
-                      </div>
-                    </div>
+        <div className='col-sm-10 mx-auto'>
+          <PropertyFilters searchParams={searchParams} setSearchParams={setSearchParams} />
+          {loaded && <p className="featuredp mb-0">{total} {total === 1 ? 'property' : 'properties'} found</p>}
+
+          <div className='row g-4 py-3'>
+            {items.map((item) => (
+              <div key={item._id} className='col-sm-6 col-lg-3'>
+                <PropertyCard property={item}>
+                  <div className='d-flex gap-2'>
+                    <Link to={`/admin-edit/${item._id}`} className='btn btn-outline-primary p-1 flex-fill'>Edit</Link>
+                    <button onClick={() => handleDeleteProperty(item)} className='btn btn-outline-danger p-1 flex-fill'>Delete</button>
                   </div>
-                </div>
-              )
-            })}
-            {listData?.length == 0 && <h1 className='text-center'>No Record Found</h1>}
+                </PropertyCard>
+              </div>
+            ))}
           </div>
+          {loaded && items.length == 0 && <h4 className='text-center my-4'>No Record Found</h4>}
+          <Pagination page={page} pages={pages} onChange={setPage} />
         </div>
-        <div className='col-sm-1'></div>
       </div>
     </>
   )

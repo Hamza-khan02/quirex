@@ -2,7 +2,7 @@
 import React from "react";
 
 import NavBar from "./NavBar";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 const Services = () => {
  const location=useLocation(); 
  
@@ -22,7 +22,7 @@ const Services = () => {
               <h3 className="text-center py-2"><b>Buy a home</b></h3>
               <p className="text-center">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
                 when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-              <p className="text-center text-success py-3"><span className=" bg-light rounded-2 p-2">Find A Home &rarr;</span></p>
+              <p className="text-center py-3"><Link to="/property?listingType=sale" className="text-success text-decoration-none bg-light rounded-2 p-2">Find A Home &rarr;</Link></p>
 
             </div>
           </div>
@@ -32,7 +32,7 @@ const Services = () => {
               <h3 className="text-center py-2"><b>Rent a home</b></h3>
               <p className="text-center">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
                  when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-              <p className="text-center text-success py-3"><span className=" bg-light rounded-2 p-2">Find A Home &rarr;</span></p>
+              <p className="text-center py-3"><Link to="/property?listingType=rent" className="text-success text-decoration-none bg-light rounded-2 p-2">Find A Rental &rarr;</Link></p>
 
             </div>
           </div>
@@ -42,7 +42,7 @@ const Services = () => {
               <h3 className="text-center py-2"><b>Sell a home</b></h3>
               <p className="text-center">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
                  when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-              <p className="text-center text-success py-3"><span className=" bg-light rounded-2 p-2">Find A Home &rarr;</span></p>
+              <p className="text-center py-3"><Link to="/contact" className="text-success text-decoration-none bg-light rounded-2 p-2">Contact Us &rarr;</Link></p>
 
             </div>
           </div>
