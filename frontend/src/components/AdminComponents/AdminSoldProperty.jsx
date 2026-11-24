@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import NavBar from '../landingComponents/NavBar'
-import axios from 'axios';
 import Swal from 'sweetalert2';
-import { getApiUrl, getImageUrl } from '../../config/api';
+import { api, getImageUrl } from '../../config/api';
 const AdminSoldProperty = () => {
   const [data, setData] = useState([])
   useEffect(() => {
     fetchData();
   }, [])
   const fetchData = async () => {
-    const response = await axios.get(getApiUrl('/api/admin-sold-list'));
+    const response = await api.get('/api/admin-sold-list');
     if (response?.data?.code == 200) {
       setData(response?.data?.data)
     }
@@ -27,7 +26,7 @@ const AdminSoldProperty = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
 
-     const response = await axios.post(getApiUrl('/api/delete-sold-item'), { _id });
+     const response = await api.post('/api/delete-sold-item', { _id });
         if (response?.data?.code == 200) {
           Swal.fire({
             title: "Delete Property.",
@@ -72,8 +71,8 @@ const AdminSoldProperty = () => {
               {
                 data?.map((item,index) => { 
                   
-                  return (<>
-                    <tr>
+                  return (
+                    <tr key={item?._id}>
                       <td>{index+1}</td>
                       <td>{item?.name} </td>
                       <td> {item?.email}  </td>
@@ -85,7 +84,7 @@ const AdminSoldProperty = () => {
                       <td><img  height="60" width="100" src={getImageUrl(item?.pic)} alt=''/>    </td>
                    <td> <button onClick={()=>handleDeleteProperty(item?._id)} className='btn btn-outline-danger'>Delete</button></td>
                     </tr>
-                  </>)
+                  )
                 })
               }
               

@@ -7,9 +7,8 @@ import { FaKey } from "react-icons/fa";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import axios from 'axios';
 import Swal from 'sweetalert2';
-import { getApiUrl } from '../../config/api';
+import { api } from '../../config/api';
 const schemaproperty = yup
   .object()
   .shape({
@@ -17,8 +16,8 @@ const schemaproperty = yup
     price: yup.string().required(),
     area: yup.string().required().min(2).max(20),
     location: yup.string().required().min(2).max(20),
-    description: yup.string().required().min(2).max(20),
-    pic: yup.mixed()
+    description: yup.string().required().min(2).max(500),
+    pic: yup.mixed().test('required', 'Image is required', (files) => files?.length > 0)
   })
 const AddProperty = () => {
   const { register, handleSubmit,reset, formState: { errors } } = useForm({
@@ -32,11 +31,7 @@ const AddProperty = () => {
     formData.append('location', data?.location);
     formData.append('description', data?.description);
     formData.append('pic', data?.pic[0]);
-    const response = await axios.post(getApiUrl('/api/add-property'), formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    const response = await api.post('/api/add-property', formData)
     if (response?.data?.code == 200) {
       Swal.fire({
         title: "Add Property",
@@ -112,7 +107,7 @@ const AddProperty = () => {
                   <div className="col-md-6">
                     <label className="form-label">Image</label>
                     <div className="input-group">
-                      <input {...register('pic')} type="file" className="form-control" />
+                      <input {...register('pic')} type="file" accept="image/*" className="form-control" />
                     </div>
                     {errors?.pic && <p className='text-danger'>{errors?.pic?.message}</p>}
                   </div>

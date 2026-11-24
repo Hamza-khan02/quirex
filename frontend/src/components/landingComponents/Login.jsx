@@ -4,11 +4,11 @@ import { FaKey } from "react-icons/fa";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom'
 import NavBar from './NavBar';
-import { getApiUrl } from '../../config/api';
+import { api } from '../../config/api';
+import { setSession, homePathFor } from '../../config/auth';
 const schema = yup
   .object()
   .shape({
@@ -22,19 +22,16 @@ const Login = () => {
     resolver: yupResolver(schema),
   });
   const handleLogin = async (data) => {
-    const response = await axios.post(getApiUrl('/api/login'), data)
+    const response = await api.post('/api/login', data)
     if (response?.data?.code == 200) {
+      const { token, user } = response.data.data;
+      setSession(token, user);
       Swal.fire({
         title: "Login",
-        text: response?.data?.message,
+        text: response.data.message,
         icon: "success"
       });
-      localStorage.setItem('userInfo', JSON.stringify(response?.data?.data));
-      if (response?.data?.data?.userType == "admin") {
-        navigate('/admin-add')
-      } else if (response?.data?.data?.userType == "user") {
-        navigate('/user-property')
-      }
+      navigate(homePathFor(user))
     } else {
       Swal.fire({
         title: "Login",
@@ -46,7 +43,7 @@ const Login = () => {
   return (
     <>
       <NavBar/>
-      
+
       <div className="container my-5">
         <h2 className="login-title">Login Here</h2>
         <div className="login-box">

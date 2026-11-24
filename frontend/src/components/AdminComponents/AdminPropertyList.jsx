@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { IoBedOutline } from "react-icons/io5";
 import { FaTrashAlt } from "react-icons/fa";
 import NavBar from '../landingComponents/NavBar'
-import axios from 'axios';
 import Swal from 'sweetalert2';
-import { getApiUrl, getImageUrl } from '../../config/api';
+import { api, getImageUrl } from '../../config/api';
 const AdminPropertyList = () => {
   const [listData, setListData] = useState([])
   useEffect(() => {
@@ -12,7 +11,7 @@ const AdminPropertyList = () => {
   }, [])
 
   const fetchData = async () => {
-    const response = await axios.get(getApiUrl('/api/property-list'));
+    const response = await api.get('/api/property-list');
     if (response?.data?.code == 200) {
       setListData(response?.data?.data)
     }
@@ -31,7 +30,7 @@ const AdminPropertyList = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
 
-     const response = await axios.post(getApiUrl('/api/delete-property'), { _id });
+     const response = await api.post('/api/delete-property', { _id });
         if (response?.data?.code == 200) {
           Swal.fire({
             title: "Delete Property.",
@@ -60,14 +59,14 @@ const AdminPropertyList = () => {
         <div className='col-sm-1'></div>
         <div className='col-sm-10'>
           <div className='row py-3 px-3 '>
-            {listData?.map((item, index) => {
-              return (<>
-                <div className='col-sm-3  px-3 mb-4'>
+            {listData?.map((item) => {
+              return (
+                <div key={item?._id} className='col-sm-3  px-3 mb-4'>
                   <div className="card  mx-auto shadow-lg border border-0">
-                    <img src={getImageUrl(item?.pic)} className="card-img-top img-fluid featuredimg" alt="..." />
+                    <img src={getImageUrl(item?.pic)} className="card-img-top img-fluid featuredimg" alt={item?.title} />
                     <div className="card-body">
                       <p className='mycolor1'><b>${item?.price}</b>/Month</p>
-                      <h5 className="card-title"><b className='mycolor2'>{item?.title}</b></h5>
+                      <h5 className="card-title"><b className='mycolor2'>{item?.title}</b>{item?.isSold && <span className="badge bg-secondary ms-2">Sold</span>}</h5>
                       <p className="card-text featuredp ">{item?.description}</p>
                       <div className='row'>
                         <div className='col-4 featureddiv featuredp'>
@@ -79,7 +78,7 @@ const AdminPropertyList = () => {
                     </div>
                   </div>
                 </div>
-              </>)
+              )
             })}
             {listData?.length == 0 && <h1 className='text-center'>No Record Found</h1>}
           </div>

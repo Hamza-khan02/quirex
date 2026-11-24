@@ -13,15 +13,14 @@
 
 import React, { useEffect, useState } from 'react'
 import NavBar from '../landingComponents/NavBar'
-import axios from 'axios';
-import { getApiUrl, getImageUrl } from '../../config/api';
+import { api, getImageUrl } from '../../config/api';
 const UserList = () => {
   const [data, setData] = useState([])
   useEffect(() => {
     fetchData();
   }, [])
   const fetchData = async () => {
-    const response = await axios.get(getApiUrl('/api/admin-user-list'));
+    const response = await api.get('/api/admin-user-list');
     if (response?.data?.code == 200) {
       setData(response?.data?.data)
     }
@@ -52,8 +51,8 @@ const UserList = () => {
               {
                 data?.map((item,index) => { 
                   
-                  return (<>
-                    <tr>
+                  return (
+                    <tr key={item?._id}>
                       <td>{index+1}</td>
                       <td>{item?.name} </td>
                       <td> {item?.email}  </td>
@@ -61,7 +60,7 @@ const UserList = () => {
                       <td>{item?.address}    </td> 
                       <td><img   height="60" width="100" src={getImageUrl(item?.profile)} alt=''/>    </td>
                      </tr>
-                  </>)
+                  )
                 })
               }
               

@@ -1,179 +1,116 @@
-import express from 'express';
-import { propertyModel, buyerModel, userModel } from '../model/table.js'
+import express from "express";
+import { propertyModel, buyerModel, userModel, findByIds } from "../model/table.js";
+import { authenticate, requireRole } from "../middleware/auth.js";
+import { send } from "../utils/http.js";
+import { str, isObjectId } from "../utils/validate.js";
+import { getImage, saveImage, removeImage, removeImageIfUnused } from "../utils/upload.js";
+
 const adminRoute = express.Router();
-adminRoute.post('/add-property', async (req, res) => {
-    try {
-        const { title, price, area, description, location } = req.body;
-        const { pic } = req.files;
-        pic.mv("uploads/" + pic?.name, (err) => {
-            if (err) {
-                res.json({
-                    code: 400,
-                    message: "Error in File Upload.",
-                    data: ''
-                })
-            }
-        })
-        const isExist = await propertyModel.findOne({ title });
-        if (isExist) {
-            res.json({
-                code: 400,
-                message: "Property Already Exist.",
-                data: isExist
-            })
-        } else {
+const adminOnly = [authenticate, requireRole("admin")];
 
-            const data = new propertyModel({ title, price, area, description, location, pic: pic?.name })
-            const result = await data.save();
-            res.json({
-                code: 200,
-                message: "Property Added Successfully..",
-                data: result
-            })
-        }
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: ''
-        })
-    }
+// Public: the landing page lists properties too. `isSold` lets the page show
+// a Sold label instead of a Buy button.
+adminRoute.get("/property-list", async (req, res) => {
+  const [properties, purchases] = await Promise.all([
+    propertyModel.find(),
+    buyerModel.find({}, "propertyId"),
+  ]);
+  const soldIds = new Set(purchases.map((p) => p.propertyId));
+  const data = properties.map((property) => ({
+    ...property.toJSON(),
+    isSold: soldIds.has(String(property._id)),
+  }));
+  return send(res, 200, "Data fetched successfully.", data);
+});
 
+adminRoute.post("/add-property", adminOnly, async (req, res) => {
+  const body = req.body ?? {};
+  const fields = {
+    title: str(body.title),
+    price: str(body.price),
+    area: str(body.area),
+    description: str(body.description),
+    location: str(body.location),
+  };
+  if (Object.values(fields).some((value) => !value)) {
+    return send(res, 400, "Title, price, area, description and location are required.");
+  }
 
-})
-adminRoute.get('/property-list', async (req, res) => {
-    try {
-        const result = await propertyModel.find();
-        if (result?.length > 0) {
-            res.json({
-                code: 200,
-                message: "Data fetched successfully..",
-                data: result
-            })
-        } else {
-            res.json({
-                code: 400,
-                message: "Data Not Found.",
-                data: []
-            })
-        }
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: []
-        })
-    }
-})
+  const image = getImage(req, "pic");
+  if (image.error) return send(res, image.status, image.error);
+  if (!image.file) return send(res, 400, "Property image is required.");
 
-adminRoute.get('/admin-sold-list', async (req, res) => {
-    try {
-        const raw = await buyerModel.find();
-        const finalData = await Promise.all(
-            raw?.map(async (item) => {
-                const propertyData = await propertyModel.findOne({ _id: item?.propertyId });
-                const userData = await userModel.findOne({ _id: item?.userId });
-                return {
-                    _id: item?._id,
-                    propertyId: propertyData?._id,
-                    title: propertyData?.title,
-                    price: propertyData?.price,
-                    area: propertyData?.area,
-                    location: propertyData?.location,
-                    description: propertyData?.description,
-                    pic: propertyData?.pic,
-                    name: userData?.name,
-                    email: userData?.email,
-                    contact: userData?.contact
-                }
-            })
-        )
-        res.json({
-            code: 200,
-            message: "Data fetched.",
-            data: finalData
-        })
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: []
-        })
-    }
-})
+  if (await propertyModel.exists({ title: fields.title })) {
+    return send(res, 409, "Property already exists.");
+  }
 
-adminRoute.post('/delete-property', async (req, res) => {
-    try {
-        const { _id } = req.body;
-        const result = await propertyModel.findByIdAndDelete({ _id });
-        if (result) {
-            res.json({
-                code: 200,
-                message: "Property Deleted Successfully.",
-                data: ''
-            })
-        }else{
-             res.json({
-                code: 400,
-                message: "Property Delete failed!",
-                data: ''
-            })
-        }
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: ''
-        })
-    }
-})
-adminRoute.post('/delete-sold-item', async (req, res) => {
-    try {
-        const { _id } = req.body;
-        const result = await buyerModel.findByIdAndDelete({ _id });
-        if (result) {
-            res.json({
-                code: 200,
-                message: "Property Deleted Successfully.",
-                data: ''
-            })
-        }else{
-             res.json({
-                code: 400,
-                message: "Property Delete failed!",
-                data: ''
-            })
-        }
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: ''
-        })
-    }
-})
-adminRoute.get('/admin-user-list', async (req, res) => {
-    try {
-        const result = await userModel.find({userType:"user"});
-        if (result?.length > 0) {
-            res.json({
-                code: 200,
-                message: "Data fetched successfully..",
-                data: result
-            })
-        } else {
-            res.json({
-                code: 400,
-                message: "Data Not Found.",
-                data: []
-            })
-        }
-    } catch (err) {
-        res.json({
-            code: 500,
-            message: "Internal Server Error.",
-            data: []
-        })
-    }
-})
+  const pic = await saveImage(image.file);
+  try {
+    const property = await propertyModel.create({ ...fields, pic });
+    return send(res, 200, "Property added successfully.", property);
+  } catch (err) {
+    await removeImage(pic);
+    throw err;
+  }
+});
+
+adminRoute.get("/admin-sold-list", adminOnly, async (req, res) => {
+  const purchases = await buyerModel.find();
+  const [properties, buyers] = await Promise.all([
+    findByIds(propertyModel, purchases.map((p) => p.propertyId)),
+    findByIds(userModel, purchases.map((p) => p.userId)),
+  ]);
+
+  // Older sales can point at a deleted property or have no buyer at all. They
+  // are still listed so the admin can delete them.
+  const data = purchases.map((purchase) => {
+    const property = properties.get(purchase.propertyId);
+    const buyer = buyers.get(purchase.userId);
+    return {
+      _id: purchase._id,
+      propertyId: property?._id,
+      title: property?.title ?? "Deleted property",
+      price: property?.price,
+      area: property?.area,
+      location: property?.location,
+      description: property?.description,
+      pic: property?.pic,
+      name: buyer?.name ?? "Unknown buyer",
+      email: buyer?.email,
+      contact: buyer?.contact,
+    };
+  });
+
+  return send(res, 200, "Data fetched successfully.", data);
+});
+
+// Deleting a property also deletes its sale record and, if nothing else uses
+// it, its image file.
+adminRoute.post("/delete-property", adminOnly, async (req, res) => {
+  const id = str(req.body?._id);
+  if (!isObjectId(id)) return send(res, 400, "Invalid property id.");
+
+  const property = await propertyModel.findByIdAndDelete(id);
+  if (!property) return send(res, 404, "Property not found.");
+
+  await buyerModel.deleteMany({ propertyId: id });
+  await removeImageIfUnused(property.pic);
+  return send(res, 200, "Property deleted successfully.");
+});
+
+// Deleting a sale record makes the property available to buy again.
+adminRoute.post("/delete-sold-item", adminOnly, async (req, res) => {
+  const id = str(req.body?._id);
+  if (!isObjectId(id)) return send(res, 400, "Invalid sale record id.");
+
+  const purchase = await buyerModel.findByIdAndDelete(id);
+  if (!purchase) return send(res, 404, "Sale record not found.");
+  return send(res, 200, "Sale record deleted. The property can be bought again.");
+});
+
+adminRoute.get("/admin-user-list", adminOnly, async (req, res) => {
+  const users = await userModel.find({ userType: "user" });
+  return send(res, 200, "Data fetched successfully.", users);
+});
+
 export default adminRoute;

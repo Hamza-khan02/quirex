@@ -93,4 +93,4 @@ const OurAnimities = () => {
   )
 }
 
-export default OurAnimities
+export default OurAnimities

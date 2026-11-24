@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import NavBar from '../landingComponents/NavBar'
-import axios from 'axios'
-import { getApiUrl, getImageUrl } from '../../config/api';
+import { api, getImageUrl } from '../../config/api';
 const UserBoughtList = () => {
   const [list, setList] = useState([])
   useEffect(() => {
     fetchData()
   }, [])
   const fetchData = async () => {
-    const UserData = JSON.parse(localStorage.getItem('userInfo'));
-    const response = await axios.post(getApiUrl('/api/user-bought-list'), {
-      userId: UserData?._id
-    })
+    // The backend reads the user from the login token.
+    const response = await api.post('/api/user-bought-list')
     if (response?.data?.code == 200) {
       setList(response?.data?.data)
     }
@@ -38,8 +35,8 @@ const UserBoughtList = () => {
             </thead>
             <tbody>
               {list?.map((item, index) => {
-                return (<>
-                  <tr>
+                return (
+                  <tr key={item?._id}>
                     <th scope="row">{index + 1}</th>
                     <td>{item?.title}</td>
                     <td>{item?.price}</td>
@@ -48,7 +45,7 @@ const UserBoughtList = () => {
                     <td>{item?.location}</td>
                     <td><img height="60" width="100" src={getImageUrl(item?.pic)} /></td>
                   </tr>
-                </>)
+                )
               })}
 
 

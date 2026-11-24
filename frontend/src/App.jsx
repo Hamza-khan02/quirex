@@ -1,9 +1,8 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.js'; 
+import 'bootstrap/dist/js/bootstrap.bundle.js';
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TopNavbar from './components/landingComponents/TopNavbar';
-import Navbar from './components/landingComponents/NavBar';
 import Home from './components/landingComponents/Home';
 import About from './components/landingComponents/About';
 import Services from './components/landingComponents/Services';
@@ -17,13 +16,16 @@ import AdminSoldProperty from './components/AdminComponents/AdminSoldProperty';
 import UserList from './components/AdminComponents/UserList';
 import AdminProfile from './components/AdminComponents/AdminProfile';
 import AdminContactUsList from './components/AdminComponents/AdminContactUsList';
-import AdminLogout from './components/AdminComponents/AdminLogout';
 import UserBoughtList from './components/userComponents/UserBoughtList';
 import UserProfile from './components/userComponents/UserProfile';
-import UserLogOut from './components/userComponents/UserLogOut';
+import ProtectedRoute from './components/ProtectedRoute';
 import Aos from 'aos';
 import { useEffect } from 'react';
 import 'aos/dist/aos.css'
+
+const adminOnly = (page) => <ProtectedRoute role="admin">{page}</ProtectedRoute>;
+const userOnly = (page) => <ProtectedRoute role="user">{page}</ProtectedRoute>;
+
 function App() {
 
 useEffect(()=>{
@@ -33,12 +35,11 @@ useEffect(()=>{
       easing: 'ease-in-sine',
       delay: 100,
     });
-})
+}, [])
   return (
     <>
       <BrowserRouter>
         <TopNavbar />
-        {/* <Navbar /> */}
         <Routes>
           {/* landing page router */}
           <Route path='/' element={<Home />} />
@@ -48,16 +49,16 @@ useEffect(()=>{
           <Route path='/register' element={<UserRegister />} />
           <Route path='/login' element={<Login />} />
           {/* admin Section  */}
-          <Route path='/admin-add' element={<AddProperty />} />
-          <Route path='/admin-list' element={<AdminPropertyList />} />
-          <Route path='/admin-sold' element={<AdminSoldProperty />} />
-          <Route path='/admin-user' element={<UserList />} />
-          <Route path='/admin-profile' element={<AdminProfile />} />
-          <Route path='/admin-contact' element={<AdminContactUsList />} /> 
+          <Route path='/admin-add' element={adminOnly(<AddProperty />)} />
+          <Route path='/admin-list' element={adminOnly(<AdminPropertyList />)} />
+          <Route path='/admin-sold' element={adminOnly(<AdminSoldProperty />)} />
+          <Route path='/admin-user' element={adminOnly(<UserList />)} />
+          <Route path='/admin-profile' element={adminOnly(<AdminProfile />)} />
+          <Route path='/admin-contact' element={adminOnly(<AdminContactUsList />)} />
           {/* User Route */}
-          <Route path='/user-property' element={<Property />} />
-          <Route path='/user-bought' element={<UserBoughtList/>} />
-          <Route path='/user-profile' element={<UserProfile/>} /> 
+          <Route path='/user-property' element={userOnly(<Property />)} />
+          <Route path='/user-bought' element={userOnly(<UserBoughtList />)} />
+          <Route path='/user-profile' element={userOnly(<UserProfile />)} />
         </Routes>
       </BrowserRouter>
      <Footer/>
