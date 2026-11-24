@@ -4,3 +4,8 @@
 **/.env.local
 **/.env.*.local
 !**/.env.example
+
+# User uploads are runtime data, not source.
+Backend/uploads/
+# Vite dependency cache
+**/.vite/

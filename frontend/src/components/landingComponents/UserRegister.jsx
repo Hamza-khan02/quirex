@@ -5,10 +5,10 @@ import { MdAddPhotoAlternate } from "react-icons/md";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
-import { getApiUrl } from '../../config/api';
+import { api } from '../../config/api';
 
 const schema = yup.object().shape({
   name: yup.string().required(),
@@ -16,19 +16,19 @@ const schema = yup.object().shape({
   contact: yup.string().required(),
   password: yup.string().required().min(8).max(20),
   address: yup.string().required(),
-  profile: yup.mixed().required()
+  profile: yup.mixed().test('required', 'Profile picture is required', (files) => files?.length > 0)
 });
 
 const UserRegister = () => {
 
-  const { register, handleSubmit, formState: { errors },
+  const navigate = useNavigate();
+  const { register, handleSubmit, reset, formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
   });
 
 
   const handleRegister = async (data) => {
-    try {
       const formData = new FormData();
 
       formData.append('name', data.name);
@@ -38,28 +38,22 @@ const UserRegister = () => {
       formData.append('address', data.address);
       formData.append('profile', data.profile[0]);
 
-      const response = await axios.post(getApiUrl('/api/user-register'), formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      if (response.status === 200) {
+      const response = await api.post('/api/user-register', formData);
+      if (response?.data?.code === 200) {
         Swal.fire({
           title: "Registration Successful",
-          text: response?.data?.message,
+          text: `${response.data.message} Please log in.`,
           icon: "success"
         });
-
+        reset();
+        navigate('/login');
+      } else {
+        Swal.fire({
+          title: "Registration Failed",
+          text: response?.data?.message,
+          icon: "error"
+        });
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      Swal.fire({
-        title: "Registration Failed",
-        text: error?.response?.data?.message || "Something went wrong.",
-        icon: "error"
-
-      });
-    }
   };
   return (
     <>
@@ -127,7 +121,7 @@ const UserRegister = () => {
                     <label className="form-label">Profile Picture</label>
                     <div className="input-group">
                       <span className="input-group-text"><MdAddPhotoAlternate /></span>
-                      <input type="file" {...register('profile')} className="form-control" />
+                      <input type="file" accept="image/*" {...register('profile')} className="form-control" />
                     </div>
                     {errors.profile && <p className="text-danger">{errors.profile.message}</p>}
                   </div>

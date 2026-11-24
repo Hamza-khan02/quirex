@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
+import { getUser, clearSession } from '../../config/auth';
 const NavBar = () => {
   const navigate = useNavigate()
   const [useData, setUserData] = useState(null)
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('userInfo'));
-    setUserData(user)
+    setUserData(getUser())
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('userInfo');
+    clearSession();
     navigate('/login')
   }
 
@@ -25,15 +25,17 @@ const NavBar = () => {
           </button>
           <div className="mx-5 collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-sm-0">
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-dashboard">Dashboard</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-add">Add</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-list">List</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-requests">Requests</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-sold">Sold</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-user">User</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-profile">Profile</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/admin-contact">Contact</Link></li>
             </ul>
-            <div className="d-flex align-items-center gap-3" onClick={handleLogout}>
-              <Link > <button className=" btn1  px-4 py-2 ">LogOut</button></Link>
+            <div className="d-flex align-items-center gap-3">
+              <button type="button" onClick={handleLogout} className=" btn1  px-4 py-2 ">LogOut</button>
             </div>
           </div>
         </div>
@@ -52,11 +54,14 @@ const NavBar = () => {
           <div className="mx-5 collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto mb-2 mb-sm-0">
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-property">Property</Link></li>
-              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-bought">Bought</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-wishlist">Wishlist</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-requests">Requests</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-bought">My Properties</Link></li>
               <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/user-profile">Profile</Link></li>
+              <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/contact">Contact</Link></li>
             </ul>
-            <div className="d-flex align-items-center gap-3" onClick={handleLogout}>
-              <Link > <button className=" btn1  px-4 py-2 ">LogOut</button></Link>
+            <div className="d-flex align-items-center gap-3">
+              <button type="button" onClick={handleLogout} className=" btn1  px-4 py-2 ">LogOut</button>
             </div>
           </div>
         </div>
@@ -79,6 +84,7 @@ const NavBar = () => {
                 <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/about">About</Link></li>
                 <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/services">Services</Link></li>
                 <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/property">Property</Link></li>
+                <li className="nav-item"><Link className="nav-link text-dark fw-bold" to="/contact">Contact</Link></li>
               </ul>
               <div className="d-flex align-items-center gap-3">
                 <Link to='/register'>  <button className=" btn1 px-4 py-2  ">Registration</button></Link>

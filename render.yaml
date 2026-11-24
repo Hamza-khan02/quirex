@@ -1,0 +1,37 @@
+# Render blueprint for the Quirex API (https://render.com/docs/blueprint-spec).
+# In Render: New > Blueprint > pick this repository. You will be asked for the
+# values marked `sync: false`.
+services:
+  - type: web
+    name: quirex-api
+    runtime: node
+    rootDir: Backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render runs the app behind a proxy; this lets rate limits see real IPs.
+      - key: TRUST_PROXY
+        value: "1"
+      # MongoDB Atlas connection string.
+      - key: MONGODB_URI
+        sync: false
+      # Your frontend URL, e.g. https://quirex.vercel.app (comma-separate several).
+      - key: CLIENT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Uploaded images live on the instance's disk, which is wiped on every
+      # deploy and restart on the free plan. On a paid plan, add a disk and
+      # point UPLOAD_DIR at its mount path to keep them:
+      # - key: UPLOAD_DIR
+      #   value: /var/data/uploads
+    # disk:
+    #   name: uploads
+    #   mountPath: /var/data
+    #   sizeGB: 1

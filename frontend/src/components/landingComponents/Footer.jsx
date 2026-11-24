@@ -7,6 +7,7 @@ import { IoLogoTwitter } from "react-icons/io5";
 import { FaLinkedin } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa6";
 import { BiLogoTelegram } from "react-icons/bi";
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -34,33 +35,33 @@ const Footer = () => {
     
       <div className="col-6 col-lg-2">
         <h5 className='text-light'>Company</h5>
-        <a href="#">About</a>
+        <Link to="/about">About</Link>
         <a href="#">Blog</a>
-        <a href="#">All Products</a>
+        <Link to="/property">Properties</Link>
         <a href="#">Locations Map</a>
         <a href="#">FAQ</a>
-        <a href="#">Contact us</a>
+        <Link to="/contact">Contact us</Link>
       </div>
 
 
       <div className="col-6 col-lg-2">
         <h5 className='text-light'>Services</h5>
-        <a href="#">Order tracking</a>
-        <a href="#">Wish List</a>
-        <a href="#">Login</a>
-        <a href="#">My account</a>
+        <Link to="/user-requests">My Requests</Link>
+        <Link to="/user-wishlist">Wish List</Link>
+        <Link to="/login">Login</Link>
+        <Link to="/user-profile">My account</Link>
         <a href="#">Terms & Conditions</a>
         <a href="#">Promotional Offers</a>
       </div>
 
       <div className="col-6 col-lg-2">
         <h5 className='text-light'>Customer Care</h5>
-        <a href="#">Login</a>
-        <a href="#">My account</a>
-        <a href="#">Wish List</a>
-        <a href="#">Order tracking</a>
+        <Link to="/login">Login</Link>
+        <Link to="/user-profile">My account</Link>
+        <Link to="/user-wishlist">Wish List</Link>
+        <Link to="/user-requests">My Requests</Link>
         <a href="#">FAQ</a>
-        <a href="#">Contact us</a>
+        <Link to="/contact">Contact us</Link>
       </div>
 
    
