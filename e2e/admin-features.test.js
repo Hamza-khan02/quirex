@@ -12,18 +12,18 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
   await apiCall("POST", "/api/add-property", { token: adminToken, form: { title: "Flat", price: "200", area: "2", description: "A compact city flat.", location: "Pune", pic: image() } });
 
   const swal = async () => {
-    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 10000 });
+    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 20000 });
     return (await page.textContent(".swal2-html-container")) || "";
   };
   const swalOk = async () => {
     await page.click(".swal2-confirm");
-    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 10000 });
+    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 20000 });
   };
   // A confirmation dialog followed straight away by a result dialog reuses the
   // same popup, so wait for the result text instead of the popup closing.
   const swalConfirmThen = async (expected) => {
     await page.click(".swal2-confirm");
-    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 10000 });
+    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 20000 });
     return true;
   };
   const fill = async (values) => { for (const [name, value] of Object.entries(values)) await page.fill(`[name="${name}"]`, value); };
@@ -53,7 +53,7 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
 
   await page.goto(`${WEB}/property`);
   const villaCard = page.locator(".card", { hasText: "Villa" });
-  await villaCard.getByRole("button", { name: "Login to Buy" }).waitFor({ timeout: 10000 });
+  await villaCard.getByRole("button", { name: "Login to Buy" }).waitFor({ timeout: 20000 });
   await check("visitor sees 'Login to Buy'", true);
   await villaCard.locator(".card-title a").click();
   await page.waitForURL(/\/property\/[a-f\d]{24}$/);
@@ -76,7 +76,7 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
   await page.waitForURL(`${WEB}/admin-dashboard`);
   await check("admin lands on dashboard", true);
   const enquiryCard = page.locator(".amenity-card", { hasText: "Enquiries" });
-  await enquiryCard.locator("text=2 new").waitFor({ timeout: 10000 });
+  await enquiryCard.locator("text=2 new").waitFor({ timeout: 20000 });
   await check("dashboard: 2 enquiries, 2 new", (await enquiryCard.textContent()).includes("2"));
   await check("dashboard: 2 properties", (await page.locator(".amenity-card", { hasText: "Total Properties" }).textContent()).includes("2"));
   await check("dashboard: recent enquiry listed", await page.isVisible("text=Is the villa still available to visit?"));
@@ -84,12 +84,14 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
 
   await page.click("nav >> text=Contact");
   await page.waitForURL(`${WEB}/admin-contact`);
-  await page.waitForSelector("tbody tr");
-  await check("admin enquiries table has 2 rows", (await page.locator("tbody tr").count()) === 2);
+  // Wait for this page's own heading so the dashboard's table is gone.
+  await page.locator("h1:has-text('Contact Enquiries')").waitFor();
   const carolRow = page.locator("tbody tr", { hasText: "Carol" });
+  await carolRow.getByRole("link", { name: "Villa" }).waitFor();
+  await check("admin enquiries table has 2 rows", (await page.locator("tbody tr").count()) === 2);
   await check("enquiry links to its property", await carolRow.getByRole("link", { name: "Villa" }).isVisible());
   await carolRow.getByRole("button", { name: "Mark read" }).click();
-  await carolRow.locator(".badge:has-text('Read')").waitFor({ timeout: 10000 });
+  await carolRow.locator(".badge:has-text('Read')").waitFor({ timeout: 20000 });
   await check("mark read updates the badge", true);
   await page.screenshot({ path: `${SHOTS}/enquiries.png`, fullPage: true });
 
@@ -112,7 +114,7 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
   await swal();
   await check("block reports success", await swalConfirmThen("User blocked."));
   await swalOk();
-  await aliceRow.locator(".badge:has-text('Blocked')").waitFor({ timeout: 10000 });
+  await aliceRow.locator(".badge:has-text('Blocked')").waitFor({ timeout: 20000 });
   await check("user row shows Blocked", true);
 
   await page.click("text=LogOut");
@@ -128,12 +130,12 @@ test("contact, admin dashboard, enquiries, editing, blocking and buying", async 
   await check("buy asks for confirmation", (await swal()).includes("Flat"));
   await check("buy sends a request", await swalConfirmThen("Request sent"));
   await swalOk();
-  await flatCard.getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 10000 });
+  await flatCard.getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 20000 });
   await check("card shows Request Sent", await flatCard.getByRole("button", { name: "Request Sent" }).isDisabled());
   const pendingFlat = (await apiCall("GET", "/api/admin-request-list?status=pending", { token: adminToken })).data;
   await apiCall("POST", "/api/admin-approve-request", { token: adminToken, json: { _id: pendingFlat[0]._id } });
   await page.reload();
-  await flatCard.getByRole("button", { name: "Sold" }).waitFor({ timeout: 10000 });
+  await flatCard.getByRole("button", { name: "Sold" }).waitFor({ timeout: 20000 });
   await check("card switches to Sold after approval", await flatCard.getByRole("button", { name: "Sold" }).isDisabled());
   await page.goto(`${WEB}/user-bought`);
   await page.waitForSelector("tbody tr");

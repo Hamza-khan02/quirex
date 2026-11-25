@@ -14,16 +14,16 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await add({ title: "Garden Villa", price: "320000", bedrooms: "4", listingType: "sale" });
 
   const swal = async () => {
-    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 10000 });
+    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 20000 });
     return (await page.textContent(".swal2-html-container")) || "";
   };
   const swalOk = async () => {
     await page.click(".swal2-confirm");
-    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 10000 });
+    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 20000 });
   };
   const swalConfirmThen = async (expected) => {
     await page.click(".swal2-confirm");
-    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 10000 });
+    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 20000 });
     return true;
   };
   const login = async (email, password) => {
@@ -59,11 +59,13 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await check("saved state survives a reload", (await heart("Garden Villa").getAttribute("aria-pressed")) === "true");
   await page.click("nav >> text=Wishlist");
   await page.waitForURL(`${WEB}/user-wishlist`);
+  // Wait for this page's own heading so the property list's cards are gone.
+  await page.locator("h2:has-text('My Wishlist')").waitFor();
   await card("Garden Villa").waitFor();
   await check("wishlist page shows the saved property", (await page.locator(".card").count()) === 1);
   await page.screenshot({ path: `${SHOTS}/p4-wishlist.png` });
   await heart("Garden Villa").click();
-  await page.locator("text=Your wishlist is empty.").waitFor({ timeout: 10000 });
+  await page.locator("text=Your wishlist is empty.").waitFor({ timeout: 20000 });
   await check("un-hearting removes it from the wishlist page", true);
 
   // --- Request, cancel, request again
@@ -72,7 +74,7 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await check("buy explains that the admin reviews it", (await swal()).includes("admin will review"));
   await check("request sent", await swalConfirmThen("Request sent"));
   await swalOk();
-  await card("Garden Villa").getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 10000 });
+  await card("Garden Villa").getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 20000 });
   await check("button shows Request Sent", true);
 
   await page.click("nav >> text=Requests");
@@ -84,7 +86,7 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await swal();
   await check("cancel works", await swalConfirmThen("Request cancelled"));
   await swalOk();
-  await villaRow.locator(".badge:has-text('Cancelled')").waitFor({ timeout: 10000 });
+  await villaRow.locator(".badge:has-text('Cancelled')").waitFor({ timeout: 20000 });
   await check("request shows Cancelled", true);
 
   await page.goto(`${WEB}/user-property`);
@@ -106,10 +108,10 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await check("admin logs in", (await login("admin@test.com", "TestAdmin123")).includes("Login successful"));
   await page.waitForURL(`${WEB}/admin-dashboard`);
   const requestsCard = page.locator(".amenity-card", { hasText: "Pending Requests" });
-  await requestsCard.locator("text=needs review").waitFor({ timeout: 10000 });
+  await requestsCard.locator("text=needs review").waitFor({ timeout: 20000 });
   await check("dashboard shows 2 pending requests", (await requestsCard.locator(".counter-number").innerText()) === "2");
   await page.goto(`${WEB}/admin-list`);
-  await card("Garden Villa").locator("text=2 pending requests").waitFor({ timeout: 10000 });
+  await card("Garden Villa").locator("text=2 pending requests").waitFor({ timeout: 20000 });
   await check("admin property card shows the pending count", true);
 
   await page.click("nav >> text=Requests");
@@ -129,7 +131,7 @@ test("wishlist and buy requests with admin approval", async (t) => {
   await check("approve asks for confirmation", (await swal()).includes("Other pending requests"));
   await check("approve sells the property", await swalConfirmThen("now sold"));
   await swalOk();
-  await page.locator("text=No requests here.").waitFor({ timeout: 10000 });
+  await page.locator("text=No requests here.").waitFor({ timeout: 20000 });
   await check("pending tab is empty afterwards", true);
   await page.getByRole("button", { name: "All" }).click();
   await page.waitForFunction(() => document.querySelectorAll("tbody tr").length === 3);
@@ -140,11 +142,11 @@ test("wishlist and buy requests with admin approval", async (t) => {
   // --- Results for the users
   await login("bob@test.com", "pass-word-1");
   await page.waitForURL(`${WEB}/user-property`);
-  await card("Garden Villa").getByRole("button", { name: "Sold" }).waitFor({ timeout: 10000 });
+  await card("Garden Villa").getByRole("button", { name: "Sold" }).waitFor({ timeout: 20000 });
   await check("property shows Sold to others", true);
   await page.goto(`${WEB}/user-requests`);
   const bobRow = page.locator("tbody tr", { hasText: "Garden Villa" });
-  await bobRow.locator(".badge:has-text('Rejected')").waitFor({ timeout: 10000 });
+  await bobRow.locator(".badge:has-text('Rejected')").waitFor({ timeout: 20000 });
   await check("bob sees the rejection reason", (await bobRow.textContent()).includes("Budget not verified"));
   await page.screenshot({ path: `${SHOTS}/p4-user-requests.png` });
   await logout();

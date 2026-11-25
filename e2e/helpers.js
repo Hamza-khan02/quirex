@@ -1,6 +1,7 @@
 // Shared setup for the browser tests. Each test file starts the API on a test
-// database (quirex_test_e2e_<name>) with a temporary upload folder, the Vite
-// dev server, and a headless browser. Everything is removed afterwards.
+// database (quirex_test_e2e_<name>) with a temporary upload folder, builds and
+// serves the frontend, and opens a headless browser. Everything is removed
+// afterwards.
 import { spawn, execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -96,17 +97,27 @@ export const startApp = async (t, name) => {
   execFileSync(process.execPath, ["scripts/createAdmin.js"], { cwd: BACKEND, env, stdio: "ignore" });
 
   const backend = spawnLogged(["index.js"], BACKEND, env);
-  const vite = spawnLogged(
-    [path.join(FRONTEND, "node_modules", "vite", "bin", "vite.js"), "--port", String(webPort), "--strictPort"],
-    FRONTEND,
-    { ...process.env, VITE_API_BASE_URL: API, VITE_IMAGE_BASE_URL: API }
-  );
-  procs.push(backend, vite);
+  procs.push(backend);
+
+  // Test the production build (as users get it) rather than the dev server,
+  // which re-optimizes dependencies and reloads pages on a fresh machine.
+  const vite = path.join(FRONTEND, "node_modules", "vite", "bin", "vite.js");
+  const distDir = path.join(uploadDir, "dist");
+  execFileSync(process.execPath, [vite, "build", "--outDir", distDir, "--emptyOutDir", "--logLevel", "error"], {
+    cwd: FRONTEND,
+    env: { ...process.env, VITE_API_BASE_URL: API, VITE_IMAGE_BASE_URL: API },
+    stdio: "ignore",
+  });
+  const preview = spawnLogged([vite, "preview", "--outDir", distDir, "--port", String(webPort), "--strictPort"], FRONTEND, process.env);
+  procs.push(preview);
+
   await waitUntil(() => backend.log.includes("Server running"), () => `the API server:\n${backend.log}`);
-  await waitUntil(async () => (await fetch(WEB)).ok, () => `the Vite dev server:\n${vite.log}`);
+  await waitUntil(async () => (await fetch(WEB)).ok, () => `the frontend preview server:\n${preview.log}`);
 
   browser = await chromium.launch({ channel: CHANNEL, headless: true });
   const page = await (await browser.newContext({ viewport: { width: 1366, height: 900 } })).newPage();
+  // CI machines are slower than a laptop; allow more time for each step.
+  page.setDefaultTimeout(20000);
   const consoleProblems = [];
   page.on("console", (message) => {
     if (["error", "warning"].includes(message.type())) consoleProblems.push(`${message.type()}: ${message.text()}`);

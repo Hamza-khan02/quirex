@@ -15,21 +15,21 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   await add({ title: "Sunny Flat", price: "900", bedrooms: "2", area: "850", location: "Pune", propertyType: "flat", listingType: "rent" });
 
   const swal = async () => {
-    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 10000 });
+    await page.waitForSelector(".swal2-popup", { state: "visible", timeout: 20000 });
     return (await page.textContent(".swal2-html-container")) || "";
   };
   const swalOk = async () => {
     await page.click(".swal2-confirm");
-    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 10000 });
+    await page.waitForSelector(".swal2-container", { state: "detached", timeout: 20000 });
   };
   const swalConfirmThen = async (expected) => {
     await page.click(".swal2-confirm");
-    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 10000 });
+    await page.waitForFunction((t) => document.querySelector(".swal2-html-container")?.textContent.includes(t), expected, { timeout: 20000 });
     return true;
   };
   const cardTitles = () => page.locator(".card .card-title").allInnerTexts();
   const foundText = () => page.locator("text=/\\d+ propert(y|ies) found/").innerText();
-  const waitForFound = (text) => page.locator(`text=${text}`).waitFor({ timeout: 10000 });
+  const waitForFound = (text) => page.locator(`text=${text}`).waitFor({ timeout: 20000 });
   const login = async (email, password) => {
     await page.goto(`${WEB}/login`);
     await page.fill('[name="email"]', email);
@@ -127,11 +127,11 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   await check("rent confirmation shows the monthly price", (await swal()).includes("$900/month"));
   await check("rent sends a request", await swalConfirmThen("Request sent"));
   await swalOk();
-  await sunny.getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 10000 });
+  await sunny.getByRole("button", { name: "Request Sent" }).waitFor({ timeout: 20000 });
   const pendingSunny = (await apiCall("GET", "/api/admin-request-list?status=pending", { token: adminToken })).data;
   await apiCall("POST", "/api/admin-approve-request", { token: adminToken, json: { _id: pendingSunny[0]._id } });
   await page.reload();
-  await sunny.getByRole("button", { name: "Rented" }).waitFor({ timeout: 10000 });
+  await sunny.getByRole("button", { name: "Rented" }).waitFor({ timeout: 20000 });
   await check("card switches to Rented after approval", await sunny.getByRole("button", { name: "Rented" }).isDisabled());
   await page.click("nav >> text=My Properties");
   await page.waitForURL(`${WEB}/user-bought`);
@@ -147,21 +147,21 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   await swalOk();
   await page.locator(".review-card", { hasText: "Spacious and quiet." }).waitFor();
   await check("review shows with a 'You' badge", await page.locator(".review-card", { hasText: "Alice" }).locator("text=You").isVisible());
-  await page.locator("text=4 (1 review)").waitFor({ timeout: 10000 });
+  await page.locator("text=4 (1 review)").waitFor({ timeout: 20000 });
   await check("rating summary updates", true);
   await check("form switches to update mode", await page.isVisible("text=Update your review"));
   await page.getByRole("radio", { name: "5 stars" }).click();
   await page.click("text=Update Review");
   await check("review updated", (await swal()).includes("Review updated"));
   await swalOk();
-  await page.locator("text=5 (1 review)").waitFor({ timeout: 10000 });
+  await page.locator("text=5 (1 review)").waitFor({ timeout: 20000 });
   await check("summary shows the new rating", true);
   await page.screenshot({ path: `${SHOTS}/p3-reviews.png`, fullPage: true });
   await page.locator(".review-card").getByRole("button", { name: "Delete" }).click();
   await swal();
   await check("review deleted", await swalConfirmThen("Review deleted"));
   await swalOk();
-  await page.locator(".review-card").waitFor({ state: "detached", timeout: 10000 });
+  await page.locator(".review-card").waitFor({ state: "detached", timeout: 20000 });
   await check("no reviews left", await page.isVisible("text=No reviews yet"));
 
   const unexpected = consoleProblems;
