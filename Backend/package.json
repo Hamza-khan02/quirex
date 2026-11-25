@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node --test test/auth.test.js test/admin.test.js test/search.test.js test/requests.test.js",
+    "test": "node --test test/auth.test.js test/admin.test.js test/search.test.js test/requests.test.js test/cloudinary.test.js",
     "seed:admin": "node scripts/createAdmin.js"
   },
   "keywords": [],
@@ -15,6 +15,7 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",

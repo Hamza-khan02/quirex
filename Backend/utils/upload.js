@@ -2,10 +2,17 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { v2 as cloudinary } from "cloudinary";
 import { propertyModel, userModel } from "../model/table.js";
 
-// Backend/uploads by default. Set UPLOAD_DIR to keep images somewhere else,
-// such as a persistent disk on the hosting service.
+// Where uploaded images go:
+// - Cloudinary, when CLOUDINARY_URL is set (cloudinary://key:secret@cloud_name).
+//   The database stores the image's full https URL.
+// - Otherwise this server's disk, in UPLOAD_DIR (default Backend/uploads).
+//   The database stores the file name, served from /img/<name>.
+export const STORAGE = process.env.CLOUDINARY_URL ? "cloudinary" : "local";
+const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || "quirex";
+
 export const UPLOAD_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "uploads");
@@ -20,6 +27,29 @@ const IMAGE_TYPES = {
 };
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const isRemote = (name) => /^https?:\/\//i.test(name);
+
+// https://res.cloudinary.com/<cloud>/image/upload/v1712345/quirex/abc.jpg
+//   -> "quirex/abc", but only for images in our own Cloudinary account.
+const cloudinaryPublicId = (url) => {
+  const cloudName = cloudinary.config().cloud_name;
+  const marker = `/${cloudName}/image/upload/`;
+  const start = url.indexOf(marker);
+  if (!cloudName || start < 0) return null;
+  return url
+    .slice(start + marker.length)
+    .replace(/^v\d+\//, "")
+    .replace(/\.[a-z0-9]+$/i, "");
+};
+
+// An error whose message is safe to show to the user (see index.js).
+const uploadFailed = (cause) => {
+  const err = new Error(`Image upload failed: ${cause?.message ?? cause}`);
+  err.status = 502;
+  err.publicMessage = "Could not upload the image. Please try again.";
+  return err;
+};
 
 // Returns { file } for a valid image, { status, error } for a rejected one,
 // or {} when the field was not sent.
@@ -36,9 +66,22 @@ export const getImage = (req, field) => {
   return { file };
 };
 
-// The stored name is generated, never taken from the upload, so files cannot
-// overwrite each other and always get an image extension.
+// Stores an image and returns what the database should keep for it: a
+// Cloudinary URL, or a generated local file name (never the uploaded name,
+// so files cannot overwrite each other and always get an image extension).
 export const saveImage = async (file) => {
+  if (STORAGE === "cloudinary") {
+    try {
+      const result = await cloudinary.uploader.upload(
+        `data:${file.mimetype};base64,${file.data.toString("base64")}`,
+        { folder: CLOUDINARY_FOLDER, resource_type: "image" }
+      );
+      return result.secure_url;
+    } catch (err) {
+      throw uploadFailed(err);
+    }
+  }
+
   const name = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${IMAGE_TYPES[file.mimetype]}`;
   await file.mv(path.join(UPLOAD_DIR, name));
   return name;
@@ -46,6 +89,15 @@ export const saveImage = async (file) => {
 
 export const removeImage = async (name) => {
   if (!name) return;
+  if (isRemote(name)) {
+    const publicId = STORAGE === "cloudinary" ? cloudinaryPublicId(name) : null;
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId).catch((err) => {
+        console.warn(`Could not delete ${publicId} from Cloudinary:`, err?.message ?? err);
+      });
+    }
+    return;
+  }
   await fs.promises
     .unlink(path.join(UPLOAD_DIR, path.basename(name)))
     .catch(() => {});
