@@ -1,0 +1,15 @@
+{
+  "name": "quirex-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser tests for Quirex. Needs MongoDB and the Backend and frontend dependencies installed.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 admin-features.test.js search-rentals.test.js wishlist-requests.test.js home-content.test.js"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}

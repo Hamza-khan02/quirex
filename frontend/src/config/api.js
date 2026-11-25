@@ -13,8 +13,12 @@ const normalizePath = (path) => (path.startsWith("/") ? path : `/${path}`);
 
 export const getApiUrl = (path) => `${API_BASE_URL}${normalizePath(path)}`;
 
-export const getImageUrl = (fileName) =>
-  fileName ? `${IMAGE_BASE_URL}/img/${fileName}` : "";
+// Images stored on Cloudinary are saved as full URLs; local uploads as file
+// names served by the API from /img.
+export const getImageUrl = (fileName) => {
+  if (!fileName) return "";
+  return /^https?:\/\//i.test(fileName) ? fileName : `${IMAGE_BASE_URL}/img/${fileName}`;
+};
 
 // Use this client for every backend call. It attaches the login token, and
 // every reply has the same { code, message, data } shape, so components check

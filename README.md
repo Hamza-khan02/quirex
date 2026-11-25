@@ -23,7 +23,7 @@ cp .env.example .env
 Edit `Backend/.env`:
 
 | Variable | What it is |
-|---|---|
+| --- | --- |
 | `PORT` | API port (default `9000`) |
 | `MONGODB_URI` | MongoDB connection string |
 | `CLIENT_URL` | Frontend URL allowed by CORS (default `http://localhost:5173`) |
@@ -47,18 +47,41 @@ cp .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173.
+Open <http://localhost:5173>.
 
 ## Scripts
 
 | Folder | Command | Does |
-|---|---|---|
+| --- | --- | --- |
 | `Backend` | `npm run dev` | Start the API with auto-reload |
 | `Backend` | `npm start` | Start the API |
 | `Backend` | `npm run seed:admin` | Create or reset the admin account from `.env` |
 | `frontend` | `npm run dev` | Start the dev server |
 | `frontend` | `npm run build` | Production build into `frontend/dist` |
 | `frontend` | `npm run lint` | Run ESLint |
+| `Backend` | `npm test` | Run the API tests |
+| `e2e` | `npm test` | Run the browser tests |
+
+## Tests
+
+Both test suites need MongoDB running locally. They create their own databases named `quirex_test_*`, upload images to temporary folders, and delete everything afterwards. Your `quirex` database and `Backend/uploads` folder are never touched. To use a different MongoDB, set `TEST_MONGODB_URL` (for example `mongodb://127.0.0.1:27018`).
+
+**API tests** (`Backend/test/`) start the API and call it over HTTP. They cover registration, login and roles, injection attempts, uploads, buying and renting, concurrent approvals, search and filters, reviews, the wishlist, rate limits, CORS, and image storage on Cloudinary (against a fake Cloudinary server, so no account is needed).
+
+```bash
+cd Backend
+npm test
+```
+
+**Browser tests** (`e2e/`) start the API, the Vite dev server and a headless browser, and click through the site as a visitor, a user and an admin. They need the `Backend` and `frontend` dependencies installed. On Windows they use Microsoft Edge; elsewhere, install Chromium once with `npx playwright-core install chromium`, or set `PLAYWRIGHT_CHANNEL` to `chrome` or `msedge`. Screenshots are saved to `e2e/test-results/`.
+
+```bash
+cd e2e
+npm install
+npm test
+```
+
+**GitHub Actions** ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the API tests, the frontend lint and build, and the browser tests on every pull request and every push to `main`.
 
 ## API
 
@@ -67,7 +90,7 @@ All routes are under `/api`. Every response looks like `{ code, message, data }`
 Logged-in requests send `Authorization: Bearer <token>`, using the token returned by `/api/login`.
 
 | Method | Route | Who |
-|---|---|---|
+| --- | --- | --- |
 | POST | `/user-register` | Anyone (multipart, `profile` image required) |
 | POST | `/login` | Anyone. Returns `{ token, user }` |
 | GET | `/health` | Anyone. `{ database: "connected" }` when the API and database are up |
@@ -104,7 +127,7 @@ Logged-in requests send `Authorization: Bearer <token>`, using the token returne
 `GET /api/property-list` takes these optional query parameters:
 
 | Parameter | Meaning |
-|---|---|
+| --- | --- |
 | `q` | Text matched against title, location and description |
 | `location` | Text matched against location |
 | `listingType` | `sale` or `rent` |
@@ -125,21 +148,31 @@ Uploaded images are served from `/img/<filename>`. They must be JPG, PNG, WEBP, 
 
 ## Deployment
 
-The usual free setup is MongoDB Atlas for the database, Render for the API and Vercel for the frontend. You need an account on each.
+The usual free setup is MongoDB Atlas for the database, Cloudinary for uploaded images, Render for the API and Vercel for the frontend. You need an account on each.
 
 ### 1. Database: MongoDB Atlas
 
-1. Create a free cluster at https://www.mongodb.com/atlas.
+1. Create a free cluster at <https://www.mongodb.com/atlas>.
 2. Under **Database Access**, add a database user with a password.
 3. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`), because Render's IP addresses change.
 4. Click **Connect > Drivers** and copy the connection string. Put the user's password in it and add the database name, for example `mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/quirex`.
+
+### Images: Cloudinary
+
+Render's free plan wipes the server's disk on every deploy and restart, so uploaded images must be stored elsewhere.
+
+1. Create a free account at <https://cloudinary.com>.
+2. In the dashboard, open **Settings > API Keys** and copy the **API environment variable**. It looks like `cloudinary://123456789012345:abcdEFGH...@your-cloud-name`.
+3. Use it as `CLOUDINARY_URL` in the next step. Images then go to a `quirex` folder in your Cloudinary media library (set `CLOUDINARY_FOLDER` to change it).
+
+You can also put `CLOUDINARY_URL` in `Backend/.env` to use Cloudinary while developing locally. Images uploaded before it was set stay in `Backend/uploads` and keep working.
 
 ### 2. API: Render
 
 1. Push this repository to GitHub.
 2. In Render, choose **New > Blueprint** and pick the repository. It reads [render.yaml](render.yaml).
-3. When asked, set `MONGODB_URI` to the Atlas connection string. Leave `CLIENT_URL` as `http://localhost:5173` for now; you will change it after step 3.
-4. When the deploy finishes, open `https://<your-service>.onrender.com/api/health`. It should show `"database": "connected"`.
+3. When asked, set `MONGODB_URI` to the Atlas connection string and `CLOUDINARY_URL` to the Cloudinary value. Leave `CLIENT_URL` as `http://localhost:5173` for now; you will change it after step 3.
+4. When the deploy finishes, open `https://<your-service>.onrender.com/api/health`. It should show `"database": "connected"` and `"storage": "cloudinary"`.
 5. Create the admin account in the new database from your computer:
 
    ```bash
@@ -161,8 +194,7 @@ In Render, set `CLIENT_URL` to your Vercel URL (for example `https://quirex.verc
 
 ### Things to know
 
-- **Uploaded images are not kept on Render's free plan.** Its disk is wiped on every deploy and restart, so property and profile pictures disappear. To keep them, use a paid instance with a disk and set `UPLOAD_DIR` to the disk's mount path (see the commented lines in [render.yaml](render.yaml)), or move image storage to a service such as Cloudinary.
+- **Set `CLOUDINARY_URL` on Render.** Without it, images are saved on the server's disk, which the free plan wipes on every deploy and restart, so property and profile pictures disappear. (On a paid plan you could instead attach a disk and point `UPLOAD_DIR` at it.)
 - **The free Render instance sleeps** after about 15 minutes without traffic, so the first request after that takes up to a minute.
 - **Rate limits:** login, register and contact allow `RATE_LIMIT_MAX` attempts (default 20) per IP every 15 minutes. `TRUST_PROXY=1` (already set in render.yaml) lets the limit see each visitor's own IP.
 - **`JWT_SECRET`** is required when `NODE_ENV=production`; the blueprint generates one. Changing it logs everyone out.
-

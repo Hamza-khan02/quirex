@@ -1,78 +1,48 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom';
+import { FaQuoteLeft } from 'react-icons/fa';
+import StarRating from '../common/StarRating';
+import { api } from '../../config/api';
 
+// The newest 4- and 5-star reviews written on the site. Hidden until there
+// are some.
 const Testimonial = () => {
-  return (
-   
-      <>
+  const [reviews, setReviews] = useState([]);
+  useEffect(() => {
+    api.get('/api/featured-reviews').then((response) => {
+      if (response?.data?.code == 200) setReviews(response.data.data);
+    });
+  }, []);
 
-<div className="row py-5 background ">
-  <div className="text-center ">
-      <div className="tagline ">Our Testimonial</div>
-      <h2 className="section-title">Clients Feedback</h2>
-    </div>
-     <div className="col-sm-10 mx-auto ">
-        <div className="row py-3">
-           <div className='col-sm-4 '>
-            <div className='card border border-0 shadow-lg mx-auto rounded-3 p-3 feedcard w-76 pb-3'>
-              <span className='feedtop'><img src='/img/testimonial1.png'/></span>
-              <p className='px-3 feedtext'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, tempore voluptatum! Expedita nobis vel tempore nesciunt, eligendi officiis optio nihil velit dolorem. Sit nihil dicta earum vitae excepturi obcaecati odio.</p>
-              <div className='row g-0'>
-                <div className='col-4'>
-                  <img src='/img/1.jpg_1.jpeg' className='img-fluid feedimg' />
-                </div>
-                <div className='col-8'>
-                  <span>
-                    <b>Jacob William</b><br/>
-                    <p className='color1'>SELLING AGENTS</p>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className='col-sm-4 '>
-            <div className='card border border-0 shadow-lg mx-auto rounded-3 p-3 feedcard w-76 pb-3'>
-              <span className='feedtop'><img src='/img/testimonial1.png'/></span>
-              <p className='px-3 feedtext'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, tempore voluptatum! Expedita nobis vel tempore nesciunt, eligendi officiis optio nihil velit dolorem. Sit nihil dicta earum vitae excepturi obcaecati odio.</p>
-              <div className='row g-0'>
-                <div className='col-4'>
-                  <img src='/img/2.jpg_1.jpeg' className='img-fluid feedimg' />
-                </div>
-                <div className='col-8'>
-                  <span>
-                    <b>Kelian Anderson</b><br/>
-                    <p className='color1'>SELLING AGENTS</p>
-                  </span>
+  if (reviews.length === 0) return null;
+
+  return (
+    <div className="row py-5 background">
+      <div className="text-center">
+        <div className="tagline">Reviews</div>
+        <h2 className="section-title">What Our Customers Say</h2>
+      </div>
+      <div className="col-sm-10 mx-auto">
+        <div className="row g-4 py-3 justify-content-center">
+          {reviews.map((review) => (
+            <div key={review._id} className="col-md-4">
+              <div className="amenity-card review-card h-100 text-start d-flex flex-column">
+                <FaQuoteLeft className="icons fs-3 mb-2" />
+                <p className="featuredp flex-grow-1">{review.comment}</p>
+                <div className="d-flex align-items-center gap-3">
+                  <span className="avatar-initial" aria-hidden="true">{review.name.charAt(0).toUpperCase()}</span>
+                  <div>
+                    <b>{review.name}</b>
+                    <div><StarRating value={review.rating} /></div>
+                    <Link to={`/property/${review.propertyId}`} className="small text-decoration-none">{review.propertyTitle}</Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        <div className='col-sm-4 '>
-            <div className='card border border-0 shadow-lg mx-auto rounded-3 p-3 feedcard w-76 pb-3'>
-              <span className='feedtop'><img src='/img/testimonial1.png'/></span>
-              <p className='px-3 feedtext'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque, tempore voluptatum! Expedita nobis vel tempore nesciunt, eligendi officiis optio nihil velit dolorem. Sit nihil dicta earum vitae excepturi obcaecati odio.</p>
-              <div className='row g-0'>
-                <div className='col-4'>
-                  <img src='/img/3.jpg_2.jpeg' className='img-fluid feedimg' />
-                </div>
-                <div className='col-8'>
-                  <span>
-                    <b>Adam Joseph</b><br/>
-                    <p className='color1'>SELLING AGENTS</p>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-</div>
- 
-  
-
-
-
-    </>
-
+    </div>
   )
 }
 

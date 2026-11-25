@@ -17,9 +17,10 @@ import contactRoute from "./route/contactRoute.js";
 import reviewRoute from "./route/reviewRoute.js";
 import requestRoute from "./route/requestRoute.js";
 import wishlistRoute from "./route/wishlistRoute.js";
+import siteRoute from "./route/siteRoute.js";
 import { migrateProperties } from "./utils/migrate.js";
 import { send } from "./utils/http.js";
-import { UPLOAD_DIR, MAX_FILE_SIZE } from "./utils/upload.js";
+import { UPLOAD_DIR, MAX_FILE_SIZE, STORAGE } from "./utils/upload.js";
 
 const app = express();
 const PORT = process.env.PORT || 9000;
@@ -60,7 +61,10 @@ app.use(
 
 // For uptime checks by the hosting service.
 app.get("/api/health", (req, res) =>
-  send(res, 200, "OK", { database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" })
+  send(res, 200, "OK", {
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    storage: STORAGE,
+  })
 );
 
 app.use("/api/login", limiter());
@@ -73,6 +77,7 @@ app.use("/api", contactRoute);
 app.use("/api", reviewRoute);
 app.use("/api", requestRoute);
 app.use("/api", wishlistRoute);
+app.use("/api", siteRoute);
 app.use("/api", (req, res) => send(res, 404, "Route not found."));
 
 // Express 5 passes errors thrown in async route handlers to this handler.
@@ -82,6 +87,8 @@ app.use((err, req, res, next) => {
   if (err.name === "CastError") return send(res, 400, "Invalid id.");
   if (err.code === 11000) return send(res, 409, "This record already exists.");
   console.error(err);
+  // Errors that carry a message meant for users, such as a failed image upload.
+  if (err.publicMessage) return send(res, err.status || 500, err.publicMessage);
   return send(res, 500, "Internal server error.");
 });
 
@@ -99,6 +106,7 @@ const startServer = async () => {
       });
     }
     app.listen(PORT, () => {
+      console.log(STORAGE === "cloudinary" ? "Images are stored on Cloudinary." : `Images are stored in ${UPLOAD_DIR}.`);
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {

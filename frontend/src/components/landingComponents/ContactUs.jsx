@@ -10,6 +10,7 @@ import { LuPhoneCall } from 'react-icons/lu';
 import NavBar from './NavBar';
 import { api } from '../../config/api';
 import { getUser } from '../../config/auth';
+import { SITE } from '../../config/site';
 
 const schema = yup.object().shape({
   name: yup.string().trim().required().max(100),
@@ -18,9 +19,9 @@ const schema = yup.object().shape({
 });
 
 const CONTACT_DETAILS = [
-  { icon: <FaLocationDot />, label: 'Visit Us', value: '15/A, NestTower, NYC' },
-  { icon: <LuPhoneCall />, label: 'Call Us', value: '+0123-456789' },
-  { icon: <FaRegEnvelope />, label: 'Email Us', value: 'Info@webmail.com' },
+  { icon: <FaLocationDot />, label: 'Visit Us', value: SITE.address },
+  { icon: <LuPhoneCall />, label: 'Call Us', value: SITE.phone },
+  { icon: <FaRegEnvelope />, label: 'Email Us', value: SITE.email },
 ];
 
 const ContactUs = () => {

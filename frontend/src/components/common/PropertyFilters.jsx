@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PROPERTY_TYPES, LISTING_TYPES } from '../../config/property';
 
 const FIELDS = ['q', 'listingType', 'propertyType', 'location', 'minPrice', 'maxPrice', 'bedrooms', 'sort', 'available'];
@@ -6,13 +6,22 @@ const FIELDS = ['q', 'listingType', 'propertyType', 'location', 'minPrice', 'max
 const readValues = (searchParams) =>
   Object.fromEntries(FIELDS.map((field) => [field, searchParams.get(field) ?? '']));
 
+// The filters in a URL query, ignoring `page`, as a comparable string.
+const filtersKey = (searchParams) => JSON.stringify(readValues(searchParams));
+
 // Search form for property lists. Applying it writes the filters into the URL
 // query; usePropertySearch then loads the matching page.
 const PropertyFilters = ({ searchParams, setSearchParams }) => {
   const [values, setValues] = useState(() => readValues(searchParams));
+  // The filters the form last showed. Search and Reset update the form
+  // themselves, so only URL changes from elsewhere (back button, links)
+  // refill it; otherwise a late refill could wipe what the user just typed.
+  const shownKey = useRef(filtersKey(searchParams));
 
-  // Keep the form in step when the URL changes (back button, links).
   useEffect(() => {
+    const key = filtersKey(searchParams);
+    if (key === shownKey.current) return;
+    shownKey.current = key;
     setValues(readValues(searchParams));
   }, [searchParams]);
 
@@ -27,10 +36,16 @@ const PropertyFilters = ({ searchParams, setSearchParams }) => {
     for (const [name, value] of Object.entries(values)) {
       if (value !== '') next.set(name, value);
     }
+    shownKey.current = filtersKey(next);
     setSearchParams(next);
   };
 
-  const reset = () => setSearchParams(new URLSearchParams());
+  const reset = () => {
+    const empty = new URLSearchParams();
+    shownKey.current = filtersKey(empty);
+    setValues(readValues(empty));
+    setSearchParams(empty);
+  };
 
   return (
     <form onSubmit={apply} className="form-box mb-4" aria-label="Search properties">
