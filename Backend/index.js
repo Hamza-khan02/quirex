@@ -17,6 +17,7 @@ import contactRoute from "./route/contactRoute.js";
 import reviewRoute from "./route/reviewRoute.js";
 import requestRoute from "./route/requestRoute.js";
 import wishlistRoute from "./route/wishlistRoute.js";
+import siteRoute from "./route/siteRoute.js";
 import { migrateProperties } from "./utils/migrate.js";
 import { send } from "./utils/http.js";
 import { UPLOAD_DIR, MAX_FILE_SIZE, STORAGE } from "./utils/upload.js";
@@ -76,6 +77,7 @@ app.use("/api", contactRoute);
 app.use("/api", reviewRoute);
 app.use("/api", requestRoute);
 app.use("/api", wishlistRoute);
+app.use("/api", siteRoute);
 app.use("/api", (req, res) => send(res, 404, "Route not found."));
 
 // Express 5 passes errors thrown in async route handlers to this handler.

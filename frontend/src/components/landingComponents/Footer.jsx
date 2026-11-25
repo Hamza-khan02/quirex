@@ -1,93 +1,58 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import { CiLocationOn } from "react-icons/ci";
 import { LuPhoneCall } from "react-icons/lu";
 import { BsEnvelope } from "react-icons/bs";
-import { ImFacebook } from "react-icons/im";
-import { IoLogoTwitter } from "react-icons/io5";
-import { FaLinkedin } from "react-icons/fa";
-import { FaYoutube } from "react-icons/fa6";
-import { BiLogoTelegram } from "react-icons/bi";
-import { Link } from 'react-router-dom';
+import SocialLinks from '../common/SocialLinks';
+import { SITE } from '../../config/site';
 
 const Footer = () => {
   return (
-   <> 
-
+    <>
       <div className="footer">
-    <div className="row g-4">
-     
-      <div className="col-12 col-md-6 col-lg-2">
-        <div className="d-flex align-items-center mb-3 logo">
-          <img src='/img/favicon.png'/> Quirex
-        </div>
-        <p>Lorem Ipsum is simply dummy text of the and typesetting industry. Lorem Ipsum is dummy text of the printing.</p>
-        <p><CiLocationOn className='me-2'/>Brooklyn, New York, United &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;States</p>
-        <p><LuPhoneCall className='me-2'/>+0123-456789</p>
-        <p><BsEnvelope className='me-2'/>example@example.com</p>
-         <div className="d-flex gap-3 mt-2">
-            <a href="#" className="text-white"><ImFacebook /></a>
-            <a href="#" className="text-white"><IoLogoTwitter /></a>
-            <a href="#" className="text-white"><FaLinkedin /></a>
-            <a href="#" className="text-white"><FaYoutube /></a>
+        <div className="row g-4">
+          <div className="col-12 col-md-6 col-lg-4">
+            <div className="d-flex align-items-center mb-3 logo">
+              <img src='/img/favicon.png' alt='' /> {SITE.name}
+            </div>
+            <p>{SITE.description}</p>
+            <p><CiLocationOn className='me-2' />{SITE.address}</p>
+            <p><LuPhoneCall className='me-2' /><a href={`tel:${SITE.phone.replace(/[^\d+]/g, '')}`} className="d-inline p-0">{SITE.phone}</a></p>
+            <p><BsEnvelope className='me-2' /><a href={`mailto:${SITE.email}`} className="d-inline p-0">{SITE.email}</a></p>
+            <SocialLinks className="mt-2" linkClassName="text-white" />
           </div>
-      </div>
 
-    
-      <div className="col-6 col-lg-2">
-        <h5 className='text-light'>Company</h5>
-        <Link to="/about">About</Link>
-        <a href="#">Blog</a>
-        <Link to="/property">Properties</Link>
-        <a href="#">Locations Map</a>
-        <a href="#">FAQ</a>
-        <Link to="/contact">Contact us</Link>
-      </div>
+          <div className="col-6 col-md-3 col-lg-2">
+            <h5 className='text-light'>Company</h5>
+            <Link to="/about">About</Link>
+            <Link to="/property">Properties</Link>
+            <Link to="/services">Services</Link>
+            <Link to="/contact">Contact us</Link>
+          </div>
 
+          <div className="col-6 col-md-3 col-lg-3">
+            <h5 className='text-light'>Explore</h5>
+            <Link to="/property?listingType=sale">Homes for Sale</Link>
+            <Link to="/property?listingType=rent">Homes for Rent</Link>
+            <Link to="/property?propertyType=flat">Flats</Link>
+            <Link to="/property?propertyType=shop">Shops</Link>
+            <Link to="/property?propertyType=land">Land</Link>
+          </div>
 
-      <div className="col-6 col-lg-2">
-        <h5 className='text-light'>Services</h5>
-        <Link to="/user-requests">My Requests</Link>
-        <Link to="/user-wishlist">Wish List</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/user-profile">My account</Link>
-        <a href="#">Terms & Conditions</a>
-        <a href="#">Promotional Offers</a>
-      </div>
-
-      <div className="col-6 col-lg-2">
-        <h5 className='text-light'>Customer Care</h5>
-        <Link to="/login">Login</Link>
-        <Link to="/user-profile">My account</Link>
-        <Link to="/user-wishlist">Wish List</Link>
-        <Link to="/user-requests">My Requests</Link>
-        <a href="#">FAQ</a>
-        <Link to="/contact">Contact us</Link>
-      </div>
-
-   
-      <div className="col-12 col-lg-4">
-        <h5 className='text-light'>Newsletter</h5>
-        <p>Subscribe to our weekly Newsletter and receive updates via email.</p>
-        <div className="d-flex mb-3">
-          <input type="email" placeholder="Email*" className="subscribe-input" />
-          <button className="subscribe-btn"><BiLogoTelegram /></button>
-        </div>
-        <h6 className="text-white mt-3">We Accept</h6>
-        <div className="payment-icons mt-2">
-          <img src='/img/payment-4.png'/>
+          <div className="col-6 col-md-3 col-lg-3">
+            <h5 className='text-light'>My Account</h5>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+            <Link to="/user-profile">My account</Link>
+            <Link to="/user-wishlist">Wish List</Link>
+            <Link to="/user-requests">My Requests</Link>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div className="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center">
-    <div className='text-center'>All Rights Reserved @ Company {new Date().getFullYear()}</div>
-    <div className="mt-2 mt-md-0">
-      <a href="#">Terms & Conditions</a>
-      <a href="#">Claim</a>
-      <a href="#">Privacy & Policy</a>
-    </div>
-  </div>
+      <div className="footer-bottom text-center">
+        &copy; {new Date().getFullYear()} {SITE.name}. All rights reserved.
+      </div>
     </>
   )
 }

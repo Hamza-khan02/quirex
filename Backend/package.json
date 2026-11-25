@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node --test test/auth.test.js test/admin.test.js test/search.test.js test/requests.test.js test/cloudinary.test.js",
+    "test": "node --test test/auth.test.js test/admin.test.js test/search.test.js test/requests.test.js test/cloudinary.test.js test/site.test.js",
     "seed:admin": "node scripts/createAdmin.js"
   },
   "keywords": [],

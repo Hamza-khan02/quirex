@@ -26,12 +26,9 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-      # Uploaded images live on the instance's disk, which is wiped on every
-      # deploy and restart on the free plan. On a paid plan, add a disk and
-      # point UPLOAD_DIR at its mount path to keep them:
-      # - key: UPLOAD_DIR
-      #   value: /var/data/uploads
-    # disk:
-    #   name: uploads
-    #   mountPath: /var/data
-    #   sizeGB: 1
+      # Cloudinary account URL (Cloudinary dashboard > API Keys >
+      # "API environment variable"), e.g. cloudinary://key:secret@cloud_name.
+      # Uploaded images are stored there. Without it they go to the instance's
+      # disk, which the free plan wipes on every deploy and restart.
+      - key: CLOUDINARY_URL
+        sync: false

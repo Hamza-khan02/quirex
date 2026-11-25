@@ -1,36 +1,28 @@
 import React from 'react'
-import { FaDribbble, FaInstagram, FaRegEnvelope, FaTwitter, FaHome } from "react-icons/fa";
-import { FaLocationDot, FaFacebookF } from "react-icons/fa6";
-
+import { FaRegEnvelope } from "react-icons/fa";
+import { FaLocationDot } from "react-icons/fa6";
+import SocialLinks from '../common/SocialLinks';
+import { SITE } from '../../config/site';
 
 const TopNavbar = () => {
   return (
-   <>
     <div className="row mycolor sticky-top">
-          <div className="col-sm-6 py-1 mycolor">
-            <div className="row">
-              <div className="col-6 py-1 text-end">
-                <FaRegEnvelope className="btncolor" />
-                &nbsp; <b className="text-light"> Info@webmail.com</b>
-              </div>
-              <div className="col-6 py-1">
-                <FaLocationDot className="btncolor" />
-                &nbsp; <b className="text-light"> 15/A, NestTower,NYC</b>
-              </div>
-            </div>
+      <div className="col-sm-6 py-1 mycolor">
+        <div className="row">
+          <div className="col-6 py-1 text-end">
+            <FaRegEnvelope className="btncolor" />
+            &nbsp; <a href={`mailto:${SITE.email}`} className="text-light fw-bold text-decoration-none">{SITE.email}</a>
           </div>
-          <div className="col-sm-6 py-1 text-center text-light mycolor ps-5">
-            <FaFacebookF />
-            &nbsp;&nbsp; <FaTwitter />
-            &nbsp;&nbsp;
-            <FaInstagram />
-            &nbsp;&nbsp;
-            <FaDribbble />
-            
-         
+          <div className="col-6 py-1">
+            <FaLocationDot className="btncolor" />
+            &nbsp; <b className="text-light">{SITE.address}</b>
           </div>
         </div>
-   </>
+      </div>
+      <div className="col-sm-6 py-1 mycolor d-flex justify-content-center align-items-center">
+        <SocialLinks linkClassName="text-light" />
+      </div>
+    </div>
   )
 }
 

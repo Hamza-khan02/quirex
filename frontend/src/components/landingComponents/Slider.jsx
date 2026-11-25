@@ -24,8 +24,9 @@ const Slider = () => {
                 />
               </b>
               <p className='mt-3'>
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
+                Houses, flats, shops and land for sale or rent, with clear prices,
+                real photos and reviews from other buyers. Search, save your
+                favourites and send a request in minutes.
               </p>
               <Link to="/contact" className="btn btn1">Make An Enquiry</Link>
             </div>
