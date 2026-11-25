@@ -30,6 +30,13 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   const cardTitles = () => page.locator(".card .card-title").allInnerTexts();
   const foundText = () => page.locator("text=/\\d+ propert(y|ies) found/").innerText();
   const waitForFound = (text) => page.locator(`text=${text}`).waitFor({ timeout: 20000 });
+  // Reset changes the URL, and the form then refills itself from the URL.
+  // Wait for the unfiltered list so typing afterwards isn't wiped.
+  const resetFilters = async () => {
+    await page.click("text=Reset");
+    await page.waitForURL(`${WEB}/property`);
+    await waitForFound("13 properties found");
+  };
   const login = async (email, password) => {
     await page.goto(`${WEB}/login`);
     await page.fill('[name="email"]', email);
@@ -61,7 +68,7 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   await page.waitForFunction(() => document.querySelectorAll(".card .card-title").length === 1);
   await check("page 2 has the last card", (await cardTitles()).length === 1);
 
-  await page.click("text=Reset");
+  await resetFilters();
   await page.fill("#filter-q", "delhi");
   await page.click("form[aria-label='Search properties'] button[type=submit]");
   await waitForFound("2 properties found");
@@ -72,7 +79,7 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   await page.waitForFunction(() => document.querySelector(".card .card-title")?.textContent.includes("Family House"));
   await check("sort high to low", (await cardTitles())[0] === "Family House");
 
-  await page.click("text=Reset");
+  await resetFilters();
   await page.selectOption("#filter-propertyType", "flat");
   await page.fill("#filter-maxPrice", "1000");
   await page.selectOption("#filter-bedrooms", "2");
