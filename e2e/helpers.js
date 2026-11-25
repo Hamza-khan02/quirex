@@ -85,7 +85,13 @@ export const startApp = async (t, name) => {
   await mongoose.connect(env.MONGODB_URI);
   const procs = [];
   let browser;
+  let page;
   t.after(async () => {
+    // The last screen, to see where a failed test stopped (CI uploads it).
+    if (page) {
+      await page.screenshot({ path: path.join(SHOTS, `final-${name}.png`), fullPage: true }).catch(() => {});
+      console.log(`[e2e ${name}] final URL: ${page.url()}`);
+    }
     await browser?.close();
     for (const proc of procs) proc.kill();
     await mongoose.connection.dropDatabase().catch(() => {});
@@ -115,9 +121,16 @@ export const startApp = async (t, name) => {
   await waitUntil(async () => (await fetch(WEB)).ok, () => `the frontend preview server:\n${preview.log}`);
 
   browser = await chromium.launch({ channel: CHANNEL, headless: true });
-  const page = await (await browser.newContext({ viewport: { width: 1366, height: 900 } })).newPage();
+  page = await (await browser.newContext({ viewport: { width: 1366, height: 900 } })).newPage();
   // CI machines are slower than a laptop; allow more time for each step.
   page.setDefaultTimeout(20000);
+  // E2E_CPU_THROTTLE=4 makes the page run 4x slower, to reproduce timing
+  // problems that only show up on slow machines (Chromium/Edge only).
+  const throttle = Number(process.env.E2E_CPU_THROTTLE || 0);
+  if (throttle > 1) {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Emulation.setCPUThrottlingRate", { rate: throttle });
+  }
   const consoleProblems = [];
   page.on("console", (message) => {
     if (["error", "warning"].includes(message.type())) consoleProblems.push(`${message.type()}: ${message.text()}`);
