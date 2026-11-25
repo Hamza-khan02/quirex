@@ -9,3 +9,6 @@
 Backend/uploads/
 # Vite dependency cache
 **/.vite/
+
+# Browser test screenshots
+e2e/test-results/
