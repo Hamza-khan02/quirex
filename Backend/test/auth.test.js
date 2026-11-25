@@ -80,10 +80,10 @@ test("registration, login, roles, uploads, buying and deleting", async (t) => {
   const flat = r.body.data;
   r = await call("POST", "/api/add-property", { token: adminToken, form: { title: "Villa", price: "1", area: "1", description: "dup", location: "x", pic: img() } });
   await check("duplicate property title -> 409", r.status === 409);
-  const filesBefore = fs.readdirSync(path.join(BACKEND, "uploads")).length;
+  const filesBefore = fs.readdirSync(env.uploadDir).length;
   r = await call("POST", "/api/add-property", { token: adminToken, form: { title: "NoPic", price: "1", area: "1", description: "x", location: "x" } });
   await check("add-property without image -> 400", r.status === 400);
-  await check("rejected requests leave no files behind", fs.readdirSync(path.join(BACKEND, "uploads")).length === filesBefore);
+  await check("rejected requests leave no files behind", fs.readdirSync(env.uploadDir).length === filesBefore);
 
   r = await call("GET", "/api/property-list");
   await check("public property-list shows isSold=false", r.status === 200 && r.body.data.items.every((p) => p.isSold === false));
