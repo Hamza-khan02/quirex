@@ -31,10 +31,13 @@ test("featured list, filters, pagination, property form, renting and reviews", a
   const foundText = () => page.locator("text=/\\d+ propert(y|ies) found/").innerText();
   const waitForFound = (text) => page.locator(`text=${text}`).waitFor({ timeout: 20000 });
   // Reset changes the URL, and the form then refills itself from the URL.
-  // Wait for the unfiltered list so typing afterwards isn't wiped.
+  // Wait for the reloaded first page (12 cards), which only arrives after
+  // that, so typing afterwards isn't wiped. (The "13 found" text alone is not
+  // enough: page 2 shows it too.)
   const resetFilters = async () => {
     await page.click("text=Reset");
     await page.waitForURL(`${WEB}/property`);
+    await page.waitForFunction(() => document.querySelectorAll(".card .card-title").length === 12);
     await waitForFound("13 properties found");
   };
   const login = async (email, password) => {
